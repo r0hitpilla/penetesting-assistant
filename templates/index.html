@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pentest Assistant</title>
+<style>
+  /* ===== RESET & BASE ===== */
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--surface3:#30363d;
+    --red:#e53e3e;--red-dim:#c53030;--blue:#3b82f6;--blue-dim:#2563eb;
+    --green:#22c55e;--yellow:#eab308;--orange:#f97316;--purple:#a855f7;
+    --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+    --border:#30363d;--radius:8px;
+    --critical:#e53e3e;--high:#f97316;--medium:#eab308;--low:#22c55e;
+  }
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  button{cursor:pointer;border:none;font-family:inherit;font-size:.875rem;border-radius:var(--radius);padding:.45rem 1rem;transition:all .15s}
+  input,select,textarea{font-family:inherit;font-size:.875rem;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:.45rem .75rem;outline:none;width:100%}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+  label{font-size:.8rem;color:var(--text2);margin-bottom:.25rem;display:block}
+  code,pre{font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--surface)}
+  ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+  /* ===== TOP BAR ===== */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-shrink:0;z-index:10}
+  .logo{font-size:1.1rem;font-weight:700;color:var(--red);letter-spacing:1px}
+  .logo span{color:var(--blue)}
+  .topbar-mid{flex:1;display:flex;gap:.5rem;align-items:center}
+  .topbar-mid input[type=text]{max-width:220px}
+  .topbar-mid input[type=number]{max-width:90px}
+  .topbar-mid select{max-width:130px}
+  .btn{display:inline-flex;align-items:center;gap:.4rem}
+  .btn-red{background:var(--red);color:#fff}.btn-red:hover{background:var(--red-dim)}
+  .btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--blue-dim)}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--text2);color:var(--text)}
+  .btn-green{background:#166534;color:#86efac}.btn-green:hover{background:#14532d}
+  .btn-sm{padding:.3rem .65rem;font-size:.78rem}
+  .session-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:.2rem .7rem;font-size:.75rem;color:var(--text2)}
+
+  /* ===== MAIN LAYOUT ===== */
+  .main{display:flex;flex:1;overflow:hidden}
+
+  /* ===== LEFT SIDEBAR ===== */
+  .sidebar{width:250px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+  .sidebar-section{padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+  .sidebar-title{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+  .phase-btn{width:100%;text-align:left;padding:.5rem .75rem;border-radius:var(--radius);background:transparent;color:var(--text2);font-size:.85rem;margin-bottom:.2rem;display:flex;align-items:center;gap:.5rem;border:1px solid transparent}
+  .phase-btn:hover{background:var(--surface2);color:var(--text)}
+  .phase-btn.active{background:var(--surface2);color:var(--text);border-color:var(--border)}
+  .phase-icon{font-size:1rem;width:20px;text-align:center}
+  .badge{margin-left:auto;background:var(--surface3);color:var(--text2);border-radius:10px;padding:0 .45rem;font-size:.7rem}
+  .badge.red{background:#7f1d1d;color:#fca5a5}
+  .sessions-list{display:flex;flex-direction:column;gap:.3rem}
+  .session-item{padding:.45rem .6rem;border-radius:var(--radius);cursor:pointer;background:var(--surface2);border:1px solid transparent;font-size:.8rem}
+  .session-item:hover{border-color:var(--border)}
+  .session-item.active{border-color:var(--blue)}
+  .session-item .s-target{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .session-item .s-meta{color:var(--text3);font-size:.72rem}
+
+  /* ===== CENTER PANEL ===== */
+  .center{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+  /* ===== PHASE TABS ===== */
+  .phase-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;flex-shrink:0}
+  .phase-tab{padding:.6rem 1rem;font-size:.85rem;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+  .phase-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .phase-tab:hover:not(.active){color:var(--text)}
+
+  /* ===== CONTENT AREA ===== */
+  .content{flex:1;overflow-y:auto;padding:1.25rem}
+  .panel{display:none}.panel.active{display:block}
+
+  /* ===== CARDS ===== */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.85rem}
+  .card-title{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+  .row{display:flex;gap:.75rem;flex-wrap:wrap}
+  .col{flex:1;min-width:160px}
+
+  /* ===== RECON ===== */
+  .port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin-top:.5rem}
+  .port-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .85rem;cursor:pointer;transition:border-color .15s}
+  .port-card:hover{border-color:var(--blue)}
+  .port-card.selected{border-color:var(--blue);background:#1c2433}
+  .port-num{font-size:1.1rem;font-weight:700;color:var(--blue)}
+  .port-svc{font-size:.78rem;color:var(--text2)}
+  .port-banner{font-size:.72rem;color:var(--text3);margin-top:.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .os-chip{display:inline-block;background:var(--surface3);border-radius:20px;padding:.15rem .6rem;font-size:.75rem;color:var(--text2);margin:.2rem .2rem 0 0}
+
+  /* ===== ATTACK SURFACE ===== */
+  .attack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;margin-top:.5rem}
+  .attack-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.7rem 1rem;cursor:pointer;transition:all .15s}
+  .attack-card:hover{border-color:var(--blue);background:#1c2433}
+  .attack-title{font-size:.85rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:.4rem}
+  .attack-meta{font-size:.75rem;color:var(--text3);margin-top:.25rem}
+  .priority{display:inline-block;border-radius:4px;padding:.1rem .4rem;font-size:.7rem;font-weight:700}
+  .priority.CRITICAL{background:#7f1d1d;color:#fca5a5}
+  .priority.HIGH{background:#7c2d12;color:#fdba74}
+  .priority.MEDIUM{background:#713f12;color:#fde68a}
+  .priority.LOW{background:#14532d;color:#86efac}
+
+  /* ===== CRAFT PANEL ===== */
+  .craft-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;align-items:end}
+  @media(max-width:700px){.craft-form{grid-template-columns:1fr}}
+  .craft-form .full{grid-column:1/-1}
+
+  /* ===== FINDINGS ===== */
+  .finding-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.85rem;overflow:hidden}
+  .finding-header{padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;user-select:none}
+  .finding-header:hover{background:var(--surface2)}
+  .finding-body{padding:0 1rem 1rem;display:none}
+  .finding-body.open{display:block}
+  .finding-risk{width:72px;text-align:center;border-radius:4px;padding:.15rem .4rem;font-size:.75rem;font-weight:700;flex-shrink:0}
+  .finding-title{flex:1;font-size:.875rem;font-weight:600}
+  .finding-meta{font-size:.75rem;color:var(--text3)}
+  .payload-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .85rem;margin:.35rem 0}
+  .payload-type{font-size:.72rem;color:var(--blue);font-weight:600;margin-bottom:.25rem}
+  .payload-desc{font-size:.78rem;color:var(--text2);margin-bottom:.35rem}
+  .payload-code{font-size:.78rem;background:var(--bg);border-radius:4px;padding:.4rem .6rem;word-break:break-all;position:relative;cursor:pointer}
+  .payload-code:hover::after{content:'Copy';position:absolute;right:.5rem;top:.3rem;font-size:.65rem;background:var(--blue);color:#fff;padding:.1rem .35rem;border-radius:3px}
+  .section-label{font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:.75rem 0 .4rem}
+  .step-item{font-size:.83rem;color:var(--text2);margin:.2rem 0;padding-left:.5rem;border-left:2px solid var(--border)}
+  .tool-item{font-size:.78rem;font-family:monospace;background:var(--surface2);border-radius:4px;padding:.3rem .6rem;margin:.2rem 0;word-break:break-all}
+
+  /* ===== LOG ===== */
+  .log{background:var(--bg);border-top:1px solid var(--border);height:140px;overflow-y:auto;padding:.5rem 1rem;font-size:.78rem;font-family:monospace;color:var(--text2);flex-shrink:0}
+  .log-entry{margin:.15rem 0}
+  .log-entry.info{color:var(--text2)}
+  .log-entry.ok{color:var(--green)}
+  .log-entry.err{color:var(--red)}
+  .log-entry.warn{color:var(--yellow)}
+  .log-time{color:var(--text3);margin-right:.4rem}
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel{width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+  .rp-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+  .rp-body{flex:1;overflow-y:auto;padding:.75rem}
+  .info-row{display:flex;justify-content:space-between;margin:.3rem 0;font-size:.82rem}
+  .info-label{color:var(--text3)}
+  .info-val{color:var(--text);font-weight:500}
+  .stat-box{background:var(--surface2);border-radius:var(--radius);padding:.6rem .85rem;margin:.35rem 0}
+  .stat-num{font-size:1.4rem;font-weight:700;color:var(--blue)}
+  .stat-label{font-size:.75rem;color:var(--text3)}
+
+  /* ===== SPINNERS & STATES ===== */
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:.9rem}
+  .empty-state .icon{font-size:2.5rem;margin-bottom:.75rem}
+
+  /* ===== MODAL ===== */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+  .modal-title{font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text)}
+  .modal-footer{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.25rem}
+  .form-group{margin-bottom:.75rem}
+
+  /* ===== UTIL ===== */
+  .flex{display:flex}.gap-sm{gap:.5rem}.items-center{align-items:center}
+  .ml-auto{margin-left:auto}.mt-sm{margin-top:.5rem}
+  .text-red{color:var(--red)}.text-green{color:var(--green)}.text-blue{color:var(--blue)}
+  .text-sm{font-size:.8rem}.text-xs{font-size:.72rem}
+  .w-full{width:100%}
+  hr{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">PENTEST<span>AI</span></div>
+  <div class="topbar-mid">
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <input type="text" id="inp-target" placeholder="IP / Domain" style="max-width:200px"/>
+      <input type="number" id="inp-port" placeholder="Port" value="80" style="max-width:80px"/>
+      <select id="inp-scan-type">
+        <option value="quick">Quick Scan</option>
+        <option value="full">Full Scan</option>
+        <option value="custom">Custom Ports</option>
+      </select>
+      <input type="text" id="inp-custom-ports" placeholder="80,443,8080..." style="max-width:140px;display:none"/>
+      <button class="btn btn-red" onclick="startSession()">&#9654; New Session</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <span id="active-session-badge" class="session-badge" style="display:none">No session</span>
+    <button class="btn btn-green btn-sm" onclick="downloadReport()" id="btn-report" style="display:none">&#8595; PDF Report</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Phases</div>
+      <button class="phase-btn active" onclick="showPhase('recon',this)">
+        <span class="phase-icon">&#128269;</span> Recon
+        <span class="badge" id="badge-recon"></span>
+      </button>
+      <button class="phase-btn" onclick="showPhase('surface',this)">
+        <span class="phase-icon">&#9888;</span> Attack Surface
+        <span class="badge red" id="badge-surface"></span>
+      </button>
+      <button class="phase-btn" onclick="showPhase('craft',this)">
+        <span class="phase-icon">&#9889;</span> Craft Payloads
+      </button>
+      <button class="phase-btn" onclick="showPhase('findings',this)">
+        <span class="phase-icon">&#128196;</span> Findings
+        <span class="badge red" id="badge-findings"></span>
+      </button>
+      <button class="phase-btn" onclick="showPhase('notes',this)">
+        <span class="phase-icon">&#128221;</span> Notes
+      </button>
+    </div>
+    <div class="sidebar-section" style="flex:1">
+      <div class="sidebar-title" style="display:flex;align-items:center;justify-content:space-between">
+        Sessions
+        <button class="btn btn-ghost btn-sm" onclick="loadSessions()">&#8635;</button>
+      </div>
+      <div class="sessions-list" id="sessions-list">
+        <div class="text-xs" style="color:var(--text3)">No sessions yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div class="center">
+    <!-- Phase tabs (visible on larger screens) -->
+    <div class="phase-tabs">
+      <div class="phase-tab active" onclick="showPhase('recon',null,this)">Recon</div>
+      <div class="phase-tab" onclick="showPhase('surface',null,this)">Attack Surface</div>
+      <div class="phase-tab" onclick="showPhase('craft',null,this)">Craft Payloads</div>
+      <div class="phase-tab" onclick="showPhase('findings',null,this)">Findings</div>
+      <div class="phase-tab" onclick="showPhase('notes',null,this)">Notes</div>
+    </div>
+
+    <div class="content">
+
+      <!-- RECON PANEL -->
+      <div class="panel active" id="panel-recon">
+        <div class="card">
+          <div class="card-title">&#128269; Reconnaissance</div>
+          <div id="recon-status" style="color:var(--text3);font-size:.85rem">Start a session to run reconnaissance.</div>
+          <div id="recon-controls" style="display:none;margin-top:.75rem;display:none">
+            <button class="btn btn-blue btn-sm" onclick="runRecon()"><span class="spinner" id="sp-recon" style="display:none"></span> &#9654; Run Scan</button>
+          </div>
+        </div>
+
+        <div id="recon-results" style="display:none">
+          <div class="card">
+            <div class="card-title">&#128246; Host Info</div>
+            <div id="host-info"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">&#128268; Open Ports</div>
+            <div id="port-grid" class="port-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATTACK SURFACE PANEL -->
+      <div class="panel" id="panel-surface">
+        <div class="card">
+          <div class="card-title">&#9888; Attack Surface</div>
+          <div id="surface-status" style="color:var(--text3);font-size:.85rem">Run reconnaissance first to discover the attack surface.</div>
+        </div>
+        <div id="attack-grid" class="attack-grid"></div>
+      </div>
+
+      <!-- CRAFT PAYLOADS PANEL -->
+      <div class="panel" id="panel-craft">
+        <div class="card">
+          <div class="card-title">&#9889; Craft Payloads</div>
+          <div class="craft-form">
+            <div class="col">
+              <label>Port</label>
+              <input type="number" id="craft-port" placeholder="80"/>
+            </div>
+            <div class="col">
+              <label>Category</label>
+              <select id="craft-category" onchange="updateAttackTypes()">
+                <option value="web">Web Application</option>
+                <option value="network">Network / Service</option>
+                <option value="mobile">Mobile</option>
+                <option value="redteam">Red Team</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Attack Type</label>
+              <select id="craft-attack-type"></select>
+            </div>
+            <div class="col full">
+              <label>Context (endpoint, param name, notes)</label>
+              <input type="text" id="craft-context" placeholder="e.g. /api/login?user=admin  or  POST /upload  or  param: id"/>
+            </div>
+            <div class="col full" style="display:flex;gap:.5rem;align-items:center">
+              <button class="btn btn-red" onclick="runCraft()" id="btn-craft">
+                <span class="spinner" id="sp-craft" style="display:none"></span>
+                &#9889; Generate Payloads
+              </button>
+              <span id="craft-status" style="font-size:.8rem;color:var(--text3)"></span>
+            </div>
+          </div>
+        </div>
+        <div id="craft-preview"></div>
+      </div>
+
+      <!-- FINDINGS PANEL -->
+      <div class="panel" id="panel-findings">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+          <div style="font-size:.9rem;font-weight:600">All Findings</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadFindings()">&#8635; Refresh</button>
+        </div>
+        <div id="findings-list">
+          <div class="empty-state"><div class="icon">&#128196;</div>No findings yet. Craft some payloads to populate findings.</div>
+        </div>
+      </div>
+
+      <!-- NOTES PANEL -->
+      <div class="panel" id="panel-notes">
+        <div class="card">
+          <div class="card-title">&#128221; Session Notes</div>
+          <textarea id="notes-area" style="height:300px;resize:vertical" placeholder="Write your pentest notes here..."></textarea>
+          <button class="btn btn-blue btn-sm mt-sm" onclick="saveNotes()">Save Notes</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- LOG -->
+    <div class="log" id="log"></div>
+  </div><!-- /center -->
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rp-header">
+      Session Info
+      <button class="btn btn-ghost btn-sm" onclick="openNewSessionModal()">+ New</button>
+    </div>
+    <div class="rp-body" id="rp-body">
+      <div style="color:var(--text3);font-size:.85rem">No active session.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- NEW SESSION MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">&#128269; New Pentest Session</div>
+    <div class="form-group">
+      <label>Target IP / Domain *</label>
+      <input type="text" id="m-target" placeholder="192.168.1.1 or example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Primary Port</label>
+      <input type="number" id="m-port" value="80"/>
+    </div>
+    <div class="form-group">
+      <label>Scan Type</label>
+      <select id="m-scan-type">
+        <option value="quick">Quick (top 13 ports)</option>
+        <option value="full">Full (all common ports)</option>
+        <option value="custom">Custom ports</option>
+      </select>
+    </div>
+    <div class="form-group" id="m-custom-ports-group" style="display:none">
+      <label>Custom Ports (comma-separated)</label>
+      <input type="text" id="m-custom-ports" placeholder="80,443,8080,8443"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-red" onclick="submitNewSession()">&#9654; Start Session</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let activeSessionId = null;
+let activeSession = null;
+let pollInterval = null;
+
+const ATTACK_TYPES = {
+  web: [
+    {v:'sqli', l:'SQL Injection'},
+    {v:'xss', l:'Cross-Site Scripting (XSS)'},
+    {v:'lfi_rfi', l:'LFI / RFI / Path Traversal'},
+    {v:'ssrf', l:'SSRF'},
+    {v:'cmdi', l:'Command Injection'},
+    {v:'auth_bypass', l:'Auth Bypass'},
+    {v:'xxe', l:'XXE'},
+    {v:'idor', l:'IDOR / BOLA'},
+  ],
+  network: [
+    {v:'smb', l:'SMB'},
+    {v:'ssh', l:'SSH'},
+    {v:'ftp', l:'FTP'},
+    {v:'rdp', l:'RDP'},
+    {v:'database', l:'Database'},
+    {v:'generic', l:'Generic Service'},
+  ],
+  mobile: [
+    {v:'android', l:'Android'},
+    {v:'ios', l:'iOS'},
+    {v:'api', l:'Mobile API'},
+  ],
+  redteam: [
+    {v:'phishing', l:'Phishing / Social Engineering'},
+    {v:'privesc_linux', l:'Linux Priv Esc'},
+    {v:'privesc_windows', l:'Windows Priv Esc'},
+    {v:'lateral', l:'Lateral Movement'},
+    {v:'persistence', l:'Persistence'},
+  ],
+};
+
+const RISK_COLORS = {CRITICAL:'#e53e3e',HIGH:'#f97316',MEDIUM:'#eab308',LOW:'#22c55e',UNKNOWN:'#6e7681'};
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type='info'){
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.className = `log-entry ${type}`;
+  div.innerHTML = `<span class="log-time">[${t}]</span>${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============================================================
+// PHASE NAVIGATION
+// ============================================================
+function showPhase(name, sideBtn, tabEl){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.phase-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.phase-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(sideBtn) sideBtn.classList.add('active');
+  if(tabEl) tabEl.classList.add('active');
+  if(name==='findings') loadFindings();
+  if(name==='notes') loadNotes();
+}
+
+// ============================================================
+// SESSION MANAGEMENT
+// ============================================================
+async function startSession(){
+  const target = document.getElementById('inp-target').value.trim();
+  const port = parseInt(document.getElementById('inp-port').value)||80;
+  const scan_type = document.getElementById('inp-scan-type').value;
+  if(!target){log('Enter a target IP or domain first.','warn');return;}
+  const res = await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target,port,scan_type})});
+  const data = await res.json();
+  if(data.error){log('Session error: '+data.error,'err');return;}
+  log(`Session created: ${target}:${port}`,'ok');
+  await setActiveSession(data.session_id);
+  showPhase('recon', document.querySelector('.phase-btn'));
+  document.querySelector('.phase-tab').classList.add('active');
+  runRecon();
+}
+
+async function setActiveSession(sid){
+  activeSessionId = sid;
+  const res = await fetch('/api/sessions/'+sid);
+  activeSession = await res.json();
+  renderSessionInfo();
+  document.getElementById('active-session-badge').style.display='inline';
+  document.getElementById('active-session-badge').textContent = `${activeSession.target}:${activeSession.port}`;
+  document.getElementById('btn-report').style.display='inline-flex';
+  document.getElementById('recon-controls').style.display='block';
+  document.getElementById('craft-port').value = activeSession.port;
+  updateAttackTypes();
+  loadSessions();
+  if(activeSession.recon && activeSession.recon.open_ports){
+    renderReconResults(activeSession.recon);
+    renderAttackSurface(activeSession.attack_surface||[]);
+  }
+}
+
+async function loadSessions(){
+  const res = await fetch('/api/sessions');
+  const sessions = await res.json();
+  const el = document.getElementById('sessions-list');
+  if(!sessions.length){el.innerHTML='<div class="text-xs" style="color:var(--text3)">No sessions.</div>';return;}
+  el.innerHTML = sessions.map(s=>`
+    <div class="session-item${s.id===activeSessionId?' active':''}" onclick="setActiveSession('${s.id}')">
+      <div class="s-target">${s.target}:${s.port}</div>
+      <div class="s-meta">${s.findings_count} findings &bull; ${s.created_at.slice(0,10)}</div>
+    </div>
+  `).join('');
+}
+
+function renderSessionInfo(){
+  if(!activeSession){return;}
+  const s = activeSession;
+  const ports = (s.recon?.open_ports||[]).length;
+  const findings = (s.findings||[]).length;
+  document.getElementById('rp-body').innerHTML = `
+    <div class="info-row"><span class="info-label">Target</span><span class="info-val">${s.target}</span></div>
+    <div class="info-row"><span class="info-label">Port</span><span class="info-val">${s.port}</span></div>
+    <div class="info-row"><span class="info-label">Scan Type</span><span class="info-val">${s.scan_type}</span></div>
+    <div class="info-row"><span class="info-label">Started</span><span class="info-val">${s.created_at.slice(0,10)}</span></div>
+    <hr/>
+    <div class="stat-box"><div class="stat-num">${ports}</div><div class="stat-label">Open Ports</div></div>
+    <div class="stat-box"><div class="stat-num text-red">${findings}</div><div class="stat-label">Findings</div></div>
+    <div class="stat-box"><div class="stat-num">${(s.attack_surface||[]).length}</div><div class="stat-label">Attack Vectors</div></div>
+    <hr/>
+    <button class="btn btn-ghost btn-sm w-full mt-sm" onclick="deleteSession()">&#128465; Delete Session</button>
+  `;
+}
+
+async function deleteSession(){
+  if(!activeSessionId||!confirm('Delete this session?')) return;
+  await fetch('/api/sessions/'+activeSessionId,{method:'DELETE'});
+  activeSessionId=null; activeSession=null;
+  document.getElementById('active-session-badge').style.display='none';
+  document.getElementById('btn-report').style.display='none';
+  document.getElementById('rp-body').innerHTML='<div style="color:var(--text3);font-size:.85rem">No active session.</div>';
+  document.getElementById('recon-results').style.display='none';
+  document.getElementById('recon-status').textContent='Start a session to run reconnaissance.';
+  document.getElementById('attack-grid').innerHTML='';
+  document.getElementById('findings-list').innerHTML='<div class="empty-state"><div class="icon">&#128196;</div>No findings.</div>';
+  loadSessions();
+  log('Session deleted.','warn');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openNewSessionModal(){
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+async function submitNewSession(){
+  const target = document.getElementById('m-target').value.trim();
+  const port = parseInt(document.getElementById('m-port').value)||80;
+  const scan_type = document.getElementById('m-scan-type').value;
+  if(!target) return;
+  closeModal();
+  const res = await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target,port,scan_type})});
+  const data = await res.json();
+  await setActiveSession(data.session_id);
+  log(`New session: ${target}:${port}`,'ok');
+  runRecon();
+}
+document.getElementById('m-scan-type').addEventListener('change',function(){
+  document.getElementById('m-custom-ports-group').style.display=this.value==='custom'?'block':'none';
+});
+
+// ============================================================
+// SCAN TYPE TOGGLE
+// ============================================================
+document.getElementById('inp-scan-type').addEventListener('change',function(){
+  document.getElementById('inp-custom-ports').style.display=this.value==='custom'?'inline-block':'none';
+});
+
+// ============================================================
+// RECON
+// ============================================================
+async function runRecon(){
+  if(!activeSessionId){log('No active session.','warn');return;}
+  const sp = document.getElementById('sp-recon');
+  if(sp) sp.style.display='inline-block';
+  document.getElementById('recon-status').textContent='Scanning...';
+  log(`Starting recon on ${activeSession.target}...`,'info');
+
+  const customPorts = document.getElementById('inp-custom-ports').value.trim();
+  const scan_type = document.getElementById('inp-scan-type').value;
+
+  const res = await fetch(`/api/sessions/${activeSessionId}/recon`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({scan_type, ports: customPorts})
+  });
+  const {job_id} = await res.json();
+  pollJob(job_id, 'recon', (result)=>{
+    if(sp) sp.style.display='none';
+    renderReconResults(result);
+    refreshSession();
+    log(`Recon done. ${result.open_ports?.length||0} open ports found.`,'ok');
+  });
+}
+
+function renderReconResults(recon){
+  document.getElementById('recon-results').style.display='block';
+  document.getElementById('recon-status').textContent=`Scan complete. ${recon.open_ports?.length||0} open ports.`;
+
+  // Host info
+  const osHints = (recon.os_hints||[]).map(o=>`<span class="os-chip">${o.name}</span>`).join('');
+  document.getElementById('host-info').innerHTML = `
+    <div class="info-row"><span class="info-label">IP</span><span class="info-val">${recon.resolved_ip||recon.target}</span></div>
+    <div class="info-row"><span class="info-label">Hostname</span><span class="info-val">${recon.hostname||'N/A'}</span></div>
+    <div class="info-row"><span class="info-label">OS Hints</span><span class="info-val">${osHints||'Unknown'}</span></div>
+    ${recon.errors?.length?`<div class="text-xs text-red mt-sm">${recon.errors.join(' | ')}</div>`:''}
+  `;
+
+  // Ports
+  const grid = document.getElementById('port-grid');
+  if(!recon.open_ports?.length){grid.innerHTML='<div class="text-sm" style="color:var(--text3)">No open ports found.</div>';return;}
+  grid.innerHTML = recon.open_ports.map(p=>`
+    <div class="port-card" onclick="quickFillCraft(${p.port},'${p.service||''}')">
+      <div class="port-num">${p.port}</div>
+      <div class="port-svc">${p.service||'unknown'} ${p.product||''} ${p.version||''}</div>
+      <div class="port-banner">${p.banner||''}</div>
+    </div>
+  `).join('');
+
+  // Badges
+  document.getElementById('badge-recon').textContent = recon.open_ports.length;
+  updateBadges();
+}
+
+function quickFillCraft(port, service){
+  document.getElementById('craft-port').value = port;
+  const sl = service.toLowerCase();
+  if(sl.includes('http')||port===80||port===443||port===8080||port===8443){
+    document.getElementById('craft-category').value='web';
+  } else if(['smb','ftp','ssh','rdp','mysql','postgresql','mssql','mongodb','redis'].some(s=>sl.includes(s))){
+    document.getElementById('craft-category').value='network';
+    const at = document.getElementById('craft-attack-type');
+    const map={smb:'smb',ftp:'ftp',ssh:'ssh',rdp:'rdp',mysql:'database',postgresql:'database',mssql:'database',mongodb:'database',redis:'database'};
+    for(const [k,v] of Object.entries(map)){if(sl.includes(k)){setTimeout(()=>{at.value=v},50);break;}}
+  }
+  updateAttackTypes();
+  showPhase('craft');
+  document.querySelectorAll('.phase-tab')[2].classList.add('active');
+  log(`Quick fill: port ${port} (${service})`,'info');
+}
+
+// ============================================================
+// ATTACK SURFACE
+// ============================================================
+async function renderAttackSurface(surface){
+  const grid = document.getElementById('attack-grid');
+  document.getElementById('badge-surface').textContent = surface.length||'';
+  if(!surface.length){
+    document.getElementById('surface-status').textContent='No attack surface found. Run recon first.';
+    grid.innerHTML=''; return;
+  }
+  document.getElementById('surface-status').textContent=`${surface.length} attack vectors identified.`;
+  grid.innerHTML = surface.map(a=>`
+    <div class="attack-card" onclick="fillAndCraft(${a.port},'${a.category}','${a.attack_type}')">
+      <div class="attack-title">
+        <span class="priority ${a.priority}">${a.priority}</span>
+        ${a.attack_type.toUpperCase()}
+      </div>
+      <div class="attack-meta">Port ${a.port} &bull; ${a.service} &bull; ${a.category}</div>
+    </div>
+  `).join('');
+}
+
+function fillAndCraft(port, category, attack_type){
+  document.getElementById('craft-port').value = port;
+  document.getElementById('craft-category').value = category;
+  updateAttackTypes();
+  setTimeout(()=>{
+    document.getElementById('craft-attack-type').value = attack_type;
+    showPhase('craft');
+    document.querySelectorAll('.phase-tab')[2].classList.add('active');
+    runCraft();
+  },50);
+}
+
+// ============================================================
+// PAYLOAD CRAFTING
+// ============================================================
+function updateAttackTypes(){
+  const cat = document.getElementById('craft-category').value;
+  const sel = document.getElementById('craft-attack-type');
+  const types = ATTACK_TYPES[cat]||[];
+  sel.innerHTML = types.map(t=>`<option value="${t.v}">${t.l}</option>`).join('');
+}
+
+async function runCraft(){
+  if(!activeSessionId){log('No active session.','warn');return;}
+  const port = parseInt(document.getElementById('craft-port').value)||80;
+  const category = document.getElementById('craft-category').value;
+  const attack_type = document.getElementById('craft-attack-type').value;
+  const context = document.getElementById('craft-context').value.trim();
+
+  const sp = document.getElementById('sp-craft');
+  const statusEl = document.getElementById('craft-status');
+  sp.style.display='inline-block';
+  statusEl.textContent = 'AI is crafting payloads...';
+  document.getElementById('btn-craft').disabled=true;
+  log(`Crafting ${attack_type} payloads for port ${port}...`,'info');
+
+  const res = await fetch(`/api/sessions/${activeSessionId}/craft`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({port,category,attack_type,context})
+  });
+  const {job_id} = await res.json();
+  pollJob(job_id,'craft',(result)=>{
+    sp.style.display='none';
+    document.getElementById('btn-craft').disabled=false;
+    statusEl.textContent='Done!';
+    renderCraftPreview(result);
+    updateBadges();
+    log(`Payloads ready: ${result.payloads?.length||0} payloads for ${attack_type}`,'ok');
+    setTimeout(()=>statusEl.textContent='',3000);
+  });
+}
+
+function renderCraftPreview(result){
+  const el = document.getElementById('craft-preview');
+  if(!result||result.error){
+    el.innerHTML=`<div class="card"><div class="text-red">${result?.error||'Failed to generate payloads.'}</div></div>`;
+    return;
+  }
+  const risk = result.risk||'UNKNOWN';
+  const rc = RISK_COLORS[risk]||'#6e7681';
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">
+        <span style="background:${rc};color:#fff;border-radius:4px;padding:.1rem .5rem;font-size:.75rem">${risk}</span>
+        ${(result.category||'').toUpperCase()} &rsaquo; ${(result.attack_type||'').toUpperCase()} &mdash; Port ${result.port}
+      </div>
+      ${result.notes?`<div class="text-sm" style="color:var(--text2);margin-bottom:.75rem">${result.notes}</div>`:''}
+
+      ${(result.payloads||[]).length?`
+        <div class="section-label">Payloads (${result.payloads.length})</div>
+        ${result.payloads.map(p=>`
+          <div class="payload-block">
+            <div class="payload-type">[${p.type||''}] <span style="color:var(--text2);font-weight:400">${p.description||''}</span></div>
+            ${p.expected_result?`<div class="text-xs" style="color:var(--text3);margin-bottom:.3rem">Expected: ${p.expected_result}</div>`:''}
+            <div class="payload-code" onclick="copyPayload(this,'${encodeURIComponent(p.payload||'')}')">${escHtml(p.payload||'')}</div>
+          </div>
+        `).join('')}
+      `:''}
+
+      ${(result.manual_steps||[]).length?`
+        <div class="section-label">Manual Steps</div>
+        ${result.manual_steps.map((s,i)=>`<div class="step-item">${i+1}. ${escHtml(s)}</div>`).join('')}
+      `:''}
+
+      ${(result.tools||[]).length?`
+        <div class="section-label">Tools / Commands</div>
+        ${result.tools.map(t=>`<div class="tool-item">${escHtml(t)}</div>`).join('')}
+      `:''}
+    </div>
+  `;
+}
+
+function copyPayload(el, encoded){
+  const text = decodeURIComponent(encoded);
+  navigator.clipboard.writeText(text).then(()=>{
+    log(`Copied: ${text.slice(0,60)}...`,'ok');
+  });
+}
+
+// ============================================================
+// FINDINGS
+// ============================================================
+async function loadFindings(){
+  if(!activeSessionId) return;
+  const res = await fetch(`/api/sessions/${activeSessionId}/findings`);
+  const findings = await res.json();
+  updateBadges(findings.length);
+  const el = document.getElementById('findings-list');
+  if(!findings.length){
+    el.innerHTML='<div class="empty-state"><div class="icon">&#128196;</div>No findings yet.</div>';return;
+  }
+  el.innerHTML = findings.map((f,i)=>{
+    const risk = (f.risk||'UNKNOWN').toUpperCase();
+    const rc = RISK_COLORS[risk]||'#6e7681';
+    return `
+      <div class="finding-card">
+        <div class="finding-header" onclick="toggleFinding(this)">
+          <div class="finding-risk" style="background:${rc};color:#fff">${risk}</div>
+          <div class="finding-title">${(f.category||'').toUpperCase()} &rsaquo; ${(f.attack_type||'').toUpperCase()}</div>
+          <div class="finding-meta">Port ${f.port||''} &bull; ${(f.payloads||[]).length} payloads</div>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteFinding(${i})" style="margin-left:.5rem">&#128465;</button>
+          <span style="color:var(--text3);font-size:.9rem">&#8964;</span>
+        </div>
+        <div class="finding-body" id="fb-${i}">
+          ${f.notes?`<div class="text-sm" style="color:var(--text2);margin-bottom:.5rem">${escHtml(f.notes)}</div>`:''}
+          ${(f.payloads||[]).map(p=>`
+            <div class="payload-block">
+              <div class="payload-type">[${p.type||''}] ${p.description||''}</div>
+              <div class="payload-code" onclick="copyPayload(this,'${encodeURIComponent(p.payload||'')}')">${escHtml(p.payload||'')}</div>
+            </div>
+          `).join('')}
+          ${(f.manual_steps||[]).length?`
+            <div class="section-label">Steps</div>
+            ${f.manual_steps.map((s,j)=>`<div class="step-item">${j+1}. ${escHtml(s)}</div>`).join('')}
+          `:''}
+          ${(f.tools||[]).length?`
+            <div class="section-label">Tools</div>
+            ${f.tools.map(t=>`<div class="tool-item">${escHtml(t)}</div>`).join('')}
+          `:''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleFinding(header){
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+async function deleteFinding(idx){
+  if(!activeSessionId||!confirm('Remove this finding?')) return;
+  await fetch(`/api/sessions/${activeSessionId}/findings/${idx}`,{method:'DELETE'});
+  loadFindings();
+  log('Finding removed.','warn');
+}
+
+// ============================================================
+// NOTES
+// ============================================================
+function loadNotes(){
+  if(!activeSession) return;
+  document.getElementById('notes-area').value = activeSession.notes||'';
+}
+
+async function saveNotes(){
+  if(!activeSessionId) return;
+  const notes = document.getElementById('notes-area').value;
+  await fetch(`/api/sessions/${activeSessionId}/notes`,{
+    method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({notes})
+  });
+  if(activeSession) activeSession.notes = notes;
+  log('Notes saved.','ok');
+}
+
+// ============================================================
+// REPORT
+// ============================================================
+function downloadReport(){
+  if(!activeSessionId){log('No active session.','warn');return;}
+  log('Generating PDF report...','info');
+  window.open(`/api/sessions/${activeSessionId}/report`,'_blank');
+}
+
+// ============================================================
+// JOB POLLING
+// ============================================================
+function pollJob(job_id, label, onDone){
+  const interval = setInterval(async()=>{
+    const res = await fetch('/api/jobs/'+job_id);
+    const job = await res.json();
+    if(job.status==='done'){
+      clearInterval(interval);
+      onDone(job.result);
+    } else if(job.status==='error'){
+      clearInterval(interval);
+      log(`${label} error: ${job.error}`,'err');
+      document.getElementById(`sp-${label}`) && (document.getElementById(`sp-${label}`).style.display='none');
+      const btn = document.getElementById(`btn-${label}`);
+      if(btn) btn.disabled=false;
+    }
+  }, 1500);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function refreshSession(){
+  if(!activeSessionId) return;
+  const res = await fetch('/api/sessions/'+activeSessionId);
+  activeSession = await res.json();
+  renderSessionInfo();
+  renderAttackSurface(activeSession.attack_surface||[]);
+}
+
+function updateBadges(findingsCount){
+  if(activeSession){
+    const fc = findingsCount !== undefined ? findingsCount : (activeSession.findings||[]).length;
+    document.getElementById('badge-findings').textContent = fc||'';
+    document.getElementById('badge-surface').textContent = (activeSession.attack_surface||[]).length||'';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+updateAttackTypes();
+loadSessions();
+log('Pentest Assistant ready. Create a new session to start.','ok');
+</script>
+</body>
+</html>
