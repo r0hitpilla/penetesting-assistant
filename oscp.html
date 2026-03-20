@@ -3,138 +3,474 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>OSCP Reference</title>
+<title>Pentest Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ── RESET ─────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d1117;--s1:#161b22;--s2:#21262d;--s3:#30363d;
-  --red:#e53935;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;
-  --orange:#f0883e;--purple:#bc8cff;--cyan:#79c0ff;--pink:#ff7b72;
-  --text:#e6edf3;--dim:#8b949e;--muted:#6e7681;--border:#30363d;--r:6px;
+  --bg:        #080b12;
+  --s1:        #0e1119;
+  --s2:        #141720;
+  --s3:        #1c2030;
+  --s4:        #242840;
+  --border:    rgba(255,255,255,0.055);
+  --border2:   rgba(255,255,255,0.10);
+  --accent:    #5b6ef5;
+  --accent-d:  #4456e8;
+  --accent-g:  rgba(91,110,245,0.12);
+  --teal:      #00c4a0;
+  --red:       #f04444;
+  --yellow:    #f0b429;
+  --orange:    #f77230;
+  --purple:    #a78bfa;
+  --text:      #dde1ec;
+  --text2:     #7e8a9f;
+  --text3:     #4a5568;
+  --code-bg:   #090c14;
+  --hi-ip:     #f0b429;
+  --hi-port:   #fb923c;
+  --hi-lh:     #38bdf8;
+  --hi-lp:     #a78bfa;
+  --hi-u:      #34d399;
+  --hi-p:      #f87171;
+  --radius:    10px;
+  --radius-sm: 6px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.4);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
-button{cursor:pointer;border:none;font-family:inherit;transition:all .12s}
-input,textarea,select{font-family:inherit;background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:.35rem .6rem;outline:none}
-input:focus,textarea:focus{border-color:var(--blue)}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
-/* TOPBAR */
-.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:.5rem .9rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;flex-shrink:0}
-.logo{font-weight:800;font-size:1rem;color:var(--red);letter-spacing:1px;white-space:nowrap}.logo span{color:var(--blue)}
-.fg{display:flex;align-items:center;gap:.3rem}
-.fg label{font-size:.7rem;color:var(--muted);white-space:nowrap}
-.fg input{width:148px;font-size:.8rem}.fg input.sm{width:72px}
-.sbtn{background:var(--s3);color:var(--dim);border-radius:var(--r);padding:.3rem .6rem;font-size:.78rem}.sbtn:hover{color:var(--text)}
-.sw{flex:1;min-width:150px}.sw input{width:100%;font-size:.82rem}
-/* LAYOUT */
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:13.5px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{cursor:pointer;border:none;font-family:inherit;font-size:inherit;transition:all var(--transition)}
+input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transition)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* ── LAYOUT ────────────────────────────────────────────────── */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;height:56px;
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  backdrop-filter:blur(12px);
+}
 .body{display:flex;flex:1;overflow:hidden}
-/* SIDEBAR */
-.sidebar{width:178px;background:var(--s1);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:.4rem .35rem}
-.cb{width:100%;text-align:left;padding:.45rem .65rem;border-radius:var(--r);background:transparent;color:var(--dim);font-size:.82rem;margin-bottom:.12rem;display:flex;align-items:center;gap:.45rem;border:1px solid transparent}
-.cb:hover{background:var(--s2);color:var(--text)}.cb.active{background:var(--s2);color:var(--text);border-color:var(--border)}
-.cb .ic{font-size:.95rem;width:18px;text-align:center}
-/* MAIN */
-.main{flex:1;overflow-y:auto;padding:.9rem 1.1rem}
-/* SECTION */
-.section{margin-bottom:1.4rem}
-.stitle{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
-.stag{background:var(--s2);border-radius:3px;padding:.05rem .35rem;font-size:.65rem;color:var(--dim)}
-/* CMD */
-.cr{display:flex;align-items:flex-start;gap:.45rem;margin-bottom:.3rem}
-.cl{font-size:.7rem;color:var(--muted);white-space:nowrap;padding-top:.42rem;min-width:140px;max-width:140px;overflow:hidden;text-overflow:ellipsis}
-.cb2{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:.38rem .55rem;font-size:.78rem;font-family:'Cascadia Code','Fira Code',Consolas,monospace;word-break:break-all;line-height:1.5;cursor:pointer;transition:border-color .12s;white-space:pre-wrap}
-.cb2:hover{border-color:var(--blue)}
-.cb2 .hi{color:var(--orange)}.cb2 .hp{color:var(--yellow)}.cb2 .hl{color:var(--cyan)}.cb2 .hlp{color:var(--purple)}.cb2 .hk{color:var(--green)}.cb2 .hc{color:var(--pink)}
-.cpbtn{background:var(--s3);color:var(--dim);border-radius:var(--r);padding:.3rem .5rem;font-size:.72rem;white-space:nowrap;flex-shrink:0}.cpbtn:hover{background:var(--blue);color:#fff}.cpbtn.ok{background:var(--green);color:#fff}
-/* NOTE */
-.nr{margin-left:145px;margin-bottom:.5rem;margin-top:.1rem}
-.na{width:100%;background:transparent;border:1px solid transparent;border-radius:var(--r);padding:.28rem .5rem;font-size:.76rem;color:var(--dim);resize:none;min-height:26px;line-height:1.4}
-.na:focus{border-color:var(--border);background:var(--s2);color:var(--text)}
-.na::placeholder{color:var(--s3)}
-/* CAT HEADER */
-.ch{display:flex;align-items:center;gap:.65rem;margin-bottom:.85rem}
-.chi{font-size:1.4rem}.chn{font-size:1rem;font-weight:700}.chd{font-size:.78rem;color:var(--dim);margin-top:.1rem}
-/* SEARCH MARK */
-.cb2 mark{background:#3b4a1a;color:#d2e56a;border-radius:2px}
-/* EMPTY */
-.empty{text-align:center;padding:3rem;color:var(--muted);font-size:.88rem}
-/* TAGS */
-.tag{display:inline-block;border-radius:3px;padding:.05rem .4rem;font-size:.68rem;font-weight:700;margin-right:.25rem}
-.tc{background:#7f1d1d;color:#fca5a5}.th{background:#7c2d12;color:#fdba74}.tm{background:#713f12;color:#fde68a}.tl{background:#14532d;color:#86efac}.ti{background:#1e3a5f;color:#93c5fd}
+
+/* ── LOGO ──────────────────────────────────────────────────── */
+.logo{
+  font-weight:600;font-size:13px;letter-spacing:.5px;
+  color:var(--text);white-space:nowrap;
+  display:flex;align-items:center;gap:8px;margin-right:4px;
+}
+.logo-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--teal));
+  flex-shrink:0;
+}
+
+/* ── INPUTS ────────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:2px}
+.field label{
+  font-size:9.5px;font-weight:500;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--text3);
+}
+.field input{
+  background:var(--s3);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:var(--radius-sm);
+  padding:5px 9px;
+  font-size:12.5px;
+  font-family:'JetBrains Mono',monospace;
+  width:100%;outline:none;
+}
+.field input:focus{border-color:rgba(91,110,245,0.5);background:var(--s4);box-shadow:0 0 0 3px rgba(91,110,245,0.08)}
+.field input::placeholder{color:var(--text3)}
+.f-ip{width:140px}.f-sm{width:72px}.f-md{width:110px}
+.search-wrap{
+  flex:1;min-width:180px;position:relative;
+  display:flex;align-items:center;
+}
+.search-wrap svg{position:absolute;left:10px;color:var(--text3);pointer-events:none;width:13px;height:13px}
+.search-wrap input{
+  width:100%;background:var(--s2);
+  border:1px solid var(--border);color:var(--text);
+  border-radius:20px;padding:6px 12px 6px 32px;
+  font-size:12.5px;outline:none;font-family:'Inter',sans-serif;
+}
+.search-wrap input:focus{border-color:rgba(91,110,245,0.4);background:var(--s3);box-shadow:0 0 0 3px rgba(91,110,245,0.07)}
+.search-wrap input::placeholder{color:var(--text3)}
+.clr-btn{
+  background:transparent;color:var(--text3);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:5px 10px;font-size:11.5px;white-space:nowrap;
+}
+.clr-btn:hover{color:var(--text);border-color:var(--border2)}
+.divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+
+/* ── SIDEBAR ───────────────────────────────────────────────── */
+.sidebar{
+  width:192px;flex-shrink:0;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  overflow-y:auto;padding:16px 10px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.nav-label{
+  font-size:9px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;color:var(--text3);
+  padding:6px 8px 4px;margin-top:4px;
+}
+.nav-btn{
+  width:100%;text-align:left;
+  padding:7px 10px;border-radius:var(--radius-sm);
+  background:transparent;color:var(--text2);
+  font-size:12.5px;font-weight:400;
+  border:1px solid transparent;
+  display:flex;align-items:center;justify-content:space-between;
+  white-space:nowrap;
+}
+.nav-btn:hover{background:var(--s2);color:var(--text);border-color:var(--border)}
+.nav-btn.active{
+  background:var(--accent-g);color:var(--text);
+  border-color:rgba(91,110,245,0.25);
+  font-weight:500;
+}
+.nav-btn .cnt{
+  font-size:10px;color:var(--text3);
+  background:var(--s3);border-radius:10px;
+  padding:1px 6px;
+}
+.nav-btn.active .cnt{background:rgba(91,110,245,0.2);color:var(--accent)}
+
+/* ── MAIN ──────────────────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;padding:28px 32px}
+
+/* ── CAT HEADER ────────────────────────────────────────────── */
+.cat-header{margin-bottom:28px}
+.cat-name{
+  font-size:18px;font-weight:600;color:var(--text);
+  letter-spacing:-.3px;margin-bottom:4px;
+}
+.cat-desc{font-size:12.5px;color:var(--text2)}
+.cat-line{
+  width:32px;height:2px;margin-top:10px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--teal));
+}
+
+/* ── SECTION ───────────────────────────────────────────────── */
+.section{margin-bottom:32px}
+.sec-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.sec-title{
+  font-size:11px;font-weight:600;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--text2);
+}
+.sec-tag{
+  font-size:9.5px;font-weight:500;letter-spacing:.4px;
+  background:rgba(0,196,160,0.12);color:var(--teal);
+  border-radius:4px;padding:2px 7px;border:1px solid rgba(0,196,160,0.2);
+}
+
+/* ── COMMAND ───────────────────────────────────────────────── */
+.cmd-wrap{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:6px;
+  overflow:hidden;transition:border-color var(--transition),box-shadow var(--transition);
+}
+.cmd-wrap:hover{border-color:var(--border2);box-shadow:var(--shadow-sm)}
+.cmd-label-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px 0;
+}
+.cmd-label{
+  font-size:11px;font-weight:500;color:var(--text2);
+  letter-spacing:.1px;
+}
+.copy-btn{
+  background:transparent;color:var(--text3);
+  font-size:10.5px;font-weight:500;letter-spacing:.3px;
+  padding:2px 8px;border-radius:4px;
+  border:1px solid transparent;
+  opacity:0;transition:all var(--transition);
+}
+.cmd-wrap:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:var(--accent-g);color:var(--accent);border-color:rgba(91,110,245,0.3)}
+.copy-btn.ok{background:rgba(0,196,160,0.12);color:var(--teal);border-color:rgba(0,196,160,0.3);opacity:1}
+.cmd-code{
+  display:block;padding:7px 12px 10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;line-height:1.65;
+  color:#c8d0e4;
+  white-space:pre-wrap;word-break:break-all;
+  cursor:pointer;
+  background:transparent;
+}
+.cmd-code:hover{color:var(--text)}
+/* syntax highlights */
+.cmd-code .hi{color:var(--hi-ip)}
+.cmd-code .hp{color:var(--hi-port)}
+.cmd-code .hl{color:var(--hi-lh)}
+.cmd-code .hlp{color:var(--hi-lp)}
+.cmd-code .hk{color:var(--hi-u)}
+.cmd-code .hc{color:var(--hi-p)}
+.cmd-code mark{background:rgba(240,180,41,0.18);color:#fde68a;border-radius:2px}
+
+/* ── NOTES ─────────────────────────────────────────────────── */
+.note-wrap{padding:0 12px 10px;margin-top:-2px}
+.note-area{
+  width:100%;background:transparent;
+  border:none;border-top:1px solid var(--border);
+  color:var(--text3);resize:none;
+  font-family:'Inter',sans-serif;font-size:11.5px;
+  line-height:1.5;padding:7px 0 0;min-height:22px;outline:none;
+}
+.note-area:focus{color:var(--text2)}
+.note-area::placeholder{color:var(--text3)}
+
+/* ── SEARCH RESULTS LABEL ──────────────────────────────────── */
+.search-cat-label{
+  font-size:10px;font-weight:600;letter-spacing:.7px;
+  text-transform:uppercase;color:var(--text3);
+  margin:20px 0 10px;padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.search-cat-label:first-child{margin-top:0}
+
+/* ── EMPTY ─────────────────────────────────────────────────── */
+.empty{
+  text-align:center;padding:64px 24px;
+  color:var(--text3);font-size:13px;
+}
+.empty strong{color:var(--text2)}
+
+/* ── FADE IN ───────────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp .22s ease both}
+.section:nth-child(1){animation-delay:.02s}
+.section:nth-child(2){animation-delay:.05s}
+.section:nth-child(3){animation-delay:.08s}
+.section:nth-child(4){animation-delay:.11s}
+.section:nth-child(5){animation-delay:.14s}
 </style>
 </head>
 <body>
+<div class="app">
+
+<!-- TOP BAR -->
 <div class="topbar">
-  <div class="logo">OSCP<span>REF</span></div>
-  <div class="fg"><label>TARGET IP</label><input id="ip" placeholder="10.10.10.10" oninput="render()"/></div>
-  <div class="fg"><label>PORT</label><input id="port" class="sm" placeholder="80" oninput="render()"/></div>
-  <div class="fg"><label>LHOST (Kali)</label><input id="lh" placeholder="10.10.14.1" oninput="render()"/></div>
-  <div class="fg"><label>LPORT</label><input id="lp" class="sm" placeholder="4444" oninput="render()"/></div>
-  <div class="fg"><label>USER</label><input id="usr" class="sm" placeholder="user" oninput="render()"/></div>
-  <div class="fg"><label>PASS</label><input id="pw" class="sm" placeholder="pass" oninput="render()"/></div>
-  <div class="fg"><label>DOMAIN</label><input id="dom" placeholder="domain.htb" oninput="render()"/></div>
-  <div class="sw"><input id="sq" placeholder="&#128269;  Search all commands..." oninput="render()"/></div>
-  <button class="sbtn" onclick="clr()">✕ Clear</button>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Pentest Reference
+  </div>
+  <div class="divider"></div>
+
+  <div class="field f-ip">
+    <label>Target IP</label>
+    <input id="ip" placeholder="10.10.10.10" oninput="render()"/>
+  </div>
+  <div class="field f-sm">
+    <label>Port</label>
+    <input id="port" placeholder="80" oninput="render()"/>
+  </div>
+  <div class="divider"></div>
+  <div class="field f-ip">
+    <label>LHOST</label>
+    <input id="lh" placeholder="10.10.14.1" oninput="render()"/>
+  </div>
+  <div class="field f-sm">
+    <label>LPORT</label>
+    <input id="lp" placeholder="4444" oninput="render()"/>
+  </div>
+  <div class="divider"></div>
+  <div class="field f-sm">
+    <label>User</label>
+    <input id="usr" placeholder="admin" oninput="render()"/>
+  </div>
+  <div class="field f-sm">
+    <label>Pass</label>
+    <input id="pw" placeholder="pass" oninput="render()"/>
+  </div>
+  <div class="field f-md">
+    <label>Domain</label>
+    <input id="dom" placeholder="domain.htb" oninput="render()"/>
+  </div>
+  <div class="divider"></div>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="9" cy="9" r="6"/><path d="M15 15l3 3"/>
+    </svg>
+    <input id="sq" placeholder="Search commands..." oninput="render()"/>
+  </div>
+  <button class="clr-btn" onclick="clr()">Clear</button>
 </div>
+
+<!-- BODY -->
 <div class="body">
   <div class="sidebar" id="SB"></div>
   <div class="main" id="MN"></div>
 </div>
+
+</div><!-- /app -->
+
 <script>
-// ── VARS ─────────────────────────────────────────────────────────
-let AC='recon';
-const NT={};
-function V(){return{IP:document.getElementById('ip').value.trim()||'{IP}',PORT:document.getElementById('port').value.trim()||'{PORT}',LHOST:document.getElementById('lh').value.trim()||'{LHOST}',LPORT:document.getElementById('lp').value.trim()||'{LPORT}',USER:document.getElementById('usr').value.trim()||'{USER}',PASS:document.getElementById('pw').value.trim()||'{PASS}',DOMAIN:document.getElementById('dom').value.trim()||'{DOMAIN}'};}
-function fill(c,v){return c.replace(/\{IP\}/g,v.IP).replace(/\{PORT\}/g,v.PORT).replace(/\{LHOST\}/g,v.LHOST).replace(/\{LPORT\}/g,v.LPORT).replace(/\{USER\}/g,v.USER).replace(/\{PASS\}/g,v.PASS).replace(/\{DOMAIN\}/g,v.DOMAIN);}
+// ── STATE ────────────────────────────────────────────────────
+let AC = 'recon';
+const NT = {};
+
+// ── VARS ─────────────────────────────────────────────────────
+function V(){
+  return{
+    IP:   document.getElementById('ip').value.trim()  ||'{IP}',
+    PORT: document.getElementById('port').value.trim()||'{PORT}',
+    LHOST:document.getElementById('lh').value.trim()  ||'{LHOST}',
+    LPORT:document.getElementById('lp').value.trim()  ||'{LPORT}',
+    USER: document.getElementById('usr').value.trim() ||'{USER}',
+    PASS: document.getElementById('pw').value.trim()  ||'{PASS}',
+    DOMAIN:document.getElementById('dom').value.trim()||'{DOMAIN}',
+  };
+}
+function fill(c,v){
+  return c
+    .replace(/\{IP\}/g,v.IP).replace(/\{PORT\}/g,v.PORT)
+    .replace(/\{LHOST\}/g,v.LHOST).replace(/\{LPORT\}/g,v.LPORT)
+    .replace(/\{USER\}/g,v.USER).replace(/\{PASS\}/g,v.PASS)
+    .replace(/\{DOMAIN\}/g,v.DOMAIN);
+}
 function er(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function eh(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 function hl(cmd,v,q){
-  let s=eh(cmd);
-  const pairs=[[v.IP,'hi'],[v.PORT,'hp'],[v.LHOST,'hl'],[v.LPORT,'hlp'],[v.USER,'hk'],[v.PASS,'hc']];
-  for(const[val,cls] of pairs){if(val&&!val.startsWith('{'))s=s.replace(new RegExp(er(val),'g'),m=>`<span class="${cls}">${m}</span>`);}
-  if(q)s=s.replace(new RegExp(`(${er(q)})`,'gi'),'<mark>$1</mark>');
+  let s = eh(cmd);
+  const map=[
+    [v.IP,'hi'],[v.PORT,'hp'],[v.LHOST,'hl'],[v.LPORT,'hlp'],
+    [v.USER,'hk'],[v.PASS,'hc'],
+  ];
+  for(const[val,cls] of map){
+    if(val && !val.startsWith('{'))
+      s=s.replace(new RegExp(er(val),'g'),m=>`<span class="${cls}">${m}</span>`);
+  }
+  if(q) s=s.replace(new RegExp(`(${er(q)})`,'gi'),'<mark>$1</mark>');
   return s;
 }
-function clr(){['ip','port','lh','lp','usr','pw','dom','sq'].forEach(id=>document.getElementById(id).value='');render();}
-// ── RENDER ───────────────────────────────────────────────────────
+
+function clr(){
+  ['ip','port','lh','lp','usr','pw','dom','sq'].forEach(id=>document.getElementById(id).value='');
+  render();
+}
+
+// ── RENDER ───────────────────────────────────────────────────
 function render(){
-  const v=V(),q=document.getElementById('sq').value.trim().toLowerCase();
-  // sidebar
-  document.getElementById('SB').innerHTML=CATS.map(c=>`<button class="cb${c.id===AC?' active':''}" onclick="AC='${c.id}';render()">${c.icon?`<span class="ic">${c.icon}</span>`:''}<span>${c.label}</span></button>`).join('');
-  // main
-  const cats=q?CATS:CATS.filter(c=>c.id===AC);
-  let html='';
+  const v = V();
+  const q = document.getElementById('sq').value.trim().toLowerCase();
+
+  // Sidebar
+  document.getElementById('SB').innerHTML =
+    '<div class="nav-label">Navigation</div>' +
+    CATS.map(c=>`
+      <button class="nav-btn${c.id===AC?' active':''}" onclick="AC='${c.id}';render()">
+        <span>${c.label}</span>
+        <span class="cnt">${c.sections.reduce((a,s)=>a+s.cmds.length,0)}</span>
+      </button>
+    `).join('');
+
+  // Main
+  const cats = q ? CATS : CATS.filter(c=>c.id===AC);
+  let html = '';
+
   for(const cat of cats){
-    let ch='';
+    let body = '';
     for(const sec of cat.sections){
-      const mc=q?sec.cmds.filter(c=>c.l.toLowerCase().includes(q)||fill(c.c,v).toLowerCase().includes(q)):sec.cmds;
-      if(!mc.length)continue;
-      const sk=cat.id+'_'+sec.title;
-      const nv=(NT[sk]||'').replace(/"/g,'&quot;');
-      ch+=`<div class="section"><div class="stitle">${eh(sec.title)}${sec.tag?` <span class="stag">${sec.tag}</span>`:''}</div>`;
+      const mc = q
+        ? sec.cmds.filter(c=>c.l.toLowerCase().includes(q)||fill(c.c,v).toLowerCase().includes(q))
+        : sec.cmds;
+      if(!mc.length) continue;
+
+      const sk = cat.id+'_'+sec.title.replace(/\W/g,'_');
+      const nv = (NT[sk]||'').replace(/"/g,'&quot;');
+
+      body += `<div class="section">
+        <div class="sec-header">
+          <span class="sec-title">${eh(sec.title)}</span>
+          ${sec.tag?`<span class="sec-tag">${eh(sec.tag)}</span>`:''}
+        </div>`;
+
       mc.forEach((cmd,i)=>{
-        const f=fill(cmd.c,v),d=hl(f,v,q),id=`c${sk.replace(/\W/g,'_')}${i}`;
-        ch+=`<div class="cr"><div class="cl" title="${eh(cmd.l)}">${eh(cmd.l)}</div><code class="cb2" id="${id}" onclick="CP('${id}','${encodeURIComponent(f)}')">${d}</code><button class="cpbtn" id="b${id}" onclick="CP('${id}','${encodeURIComponent(f)}')">Copy</button></div>`;
+        const f  = fill(cmd.c,v);
+        const id = `c${(sk+i).replace(/\W/g,'')}`;
+        body += `
+        <div class="cmd-wrap">
+          <div class="cmd-label-row">
+            <span class="cmd-label">${eh(cmd.l)}</span>
+            <button class="copy-btn" id="b${id}" onclick="CP('${id}','${encodeURIComponent(f)}')">Copy</button>
+          </div>
+          <code class="cmd-code" id="${id}" onclick="CP('${id}','${encodeURIComponent(f)}')">${hl(f,v,q)}</code>
+          <div class="note-wrap">
+            <textarea class="note-area" rows="1"
+              placeholder="Add notes..."
+              oninput="NT['${sk}']=this.value;try{localStorage.setItem('pnotes',JSON.stringify(NT));}catch(e){}"
+              onfocus="this.rows=3" onblur="this.rows=1"
+            >${nv}</textarea>
+          </div>
+        </div>`;
       });
-      ch+=`<div class="nr"><textarea class="na" rows="1" placeholder="notes..." oninput="NT['${sk}']=this.value;try{localStorage.setItem('on',JSON.stringify(NT));}catch(e){}" onfocus="this.rows=3" onblur="this.rows=1">${nv}</textarea></div>`;
-      ch+='</div>';
+
+      body += `</div>`;
     }
-    if(!ch)continue;
-    if(q)html+=`<div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:.2rem;margin-top:.8rem">${cat.icon} ${cat.label}</div>`;
-    else html+=`<div class="ch"><div class="chi">${cat.icon}</div><div><div class="chn">${cat.label}</div><div class="chd">${cat.desc}</div></div></div>`;
-    html+=ch;
+
+    if(!body) continue;
+
+    if(q){
+      html += `<div class="search-cat-label">${eh(cat.label)}</div>${body}`;
+    } else {
+      html = `<div class="cat-header">
+        <div class="cat-name">${eh(cat.label)}</div>
+        <div class="cat-desc">${eh(cat.desc)}</div>
+        <div class="cat-line"></div>
+      </div>${body}`;
+    }
   }
-  if(!html)html=`<div class="empty">No commands match "<strong>${eh(q)}</strong>"</div>`;
-  document.getElementById('MN').innerHTML=html;
+
+  if(!html) html = `<div class="empty">No commands match <strong>"${eh(q)}"</strong></div>`;
+  document.getElementById('MN').innerHTML = html;
 }
-function CP(id,enc){
-  const t=decodeURIComponent(enc);
-  navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
-  const b=document.getElementById('b'+id);
-  if(b){const o=b.textContent;b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent=o;b.classList.remove('ok');},1400);}
+
+// ── COPY ─────────────────────────────────────────────────────
+function CP(id, enc){
+  const t = decodeURIComponent(enc);
+  navigator.clipboard.writeText(t).catch(()=>{
+    const a=document.createElement('textarea');a.value=t;
+    document.body.appendChild(a);a.select();document.execCommand('copy');
+    document.body.removeChild(a);
+  });
+  const b = document.getElementById('b'+id);
+  if(b){
+    const o=b.textContent;b.textContent='Copied';b.classList.add('ok');
+    setTimeout(()=>{b.textContent=o;b.classList.remove('ok');},1500);
+  }
 }
-// ── NOTES ────────────────────────────────────────────────────────
-try{const s=localStorage.getItem('on');if(s)Object.assign(NT,JSON.parse(s));}catch(e){}
+
+// ── NOTES PERSIST ────────────────────────────────────────────
+try{const s=localStorage.getItem('pnotes');if(s)Object.assign(NT,JSON.parse(s));}catch(e){}
 </script>
+
 <script src="static/js/oscp-data.js"></script>
 <script src="static/js/oscp-data2.js"></script>
 </body>
