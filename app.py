@@ -9,7 +9,7 @@ from datetime import datetime
 from threading import Thread
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request, Response, session
+from flask import Flask, jsonify, render_template, request, Response, session, send_from_directory
 
 load_dotenv()
 
@@ -295,5 +295,11 @@ def quick_craft():
     return jsonify({"job_id": job_id})
 
 
+@app.route("/oscp")
+def oscp():
+    return send_from_directory(".", "oscp.html")
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host="0.0.0.0", port=port, debug=False)
