@@ -50,6 +50,13 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:-1;
+  background:url('static/gavryl-broken-structures.jpg') center/cover no-repeat;
+  opacity:0.13;
+  filter:saturate(0.4) brightness(0.7);
+}
 button{cursor:pointer;border:none;font-family:inherit;font-size:inherit;transition:all var(--transition)}
 input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transition)}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -58,14 +65,15 @@ input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transi
 ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
 
 /* ── LAYOUT ────────────────────────────────────────────────── */
-.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:transparent}
 .topbar{
   display:flex;align-items:center;gap:12px;
   padding:0 20px;height:56px;
-  background:var(--s1);
+  background:rgba(14,17,25,0.88);
   border-bottom:1px solid var(--border);
   flex-shrink:0;
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
 }
 .body{display:flex;flex:1;overflow:hidden}
 
@@ -124,10 +132,12 @@ input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transi
 /* ── SIDEBAR ───────────────────────────────────────────────── */
 .sidebar{
   width:192px;flex-shrink:0;
-  background:var(--s1);
+  background:rgba(14,17,25,0.82);
   border-right:1px solid var(--border);
   overflow-y:auto;padding:16px 10px;
   display:flex;flex-direction:column;gap:2px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
 .nav-label{
   font-size:9px;font-weight:600;letter-spacing:1px;
@@ -157,7 +167,7 @@ input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transi
 .nav-btn.active .cnt{background:rgba(91,110,245,0.2);color:var(--accent)}
 
 /* ── MAIN ──────────────────────────────────────────────────── */
-.main{flex:1;overflow-y:auto;padding:28px 32px}
+.main{flex:1;overflow-y:auto;padding:28px 32px;background:transparent}
 
 /* ── CAT HEADER ────────────────────────────────────────────── */
 .cat-header{margin-bottom:28px}
@@ -190,9 +200,11 @@ input,textarea{font-family:inherit;font-size:inherit;transition:all var(--transi
 
 /* ── COMMAND ───────────────────────────────────────────────── */
 .cmd-wrap{
-  background:var(--s1);border:1px solid var(--border);
+  background:rgba(14,17,25,0.78);border:1px solid var(--border);
   border-radius:var(--radius);margin-bottom:6px;
   overflow:hidden;transition:border-color var(--transition),box-shadow var(--transition);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
 .cmd-wrap:hover{border-color:var(--border2);box-shadow:var(--shadow-sm)}
 .cmd-label-row{
